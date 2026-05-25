@@ -24,7 +24,7 @@ const slides = [
         <em>endless skies</em>
       </>
     ),
-    sub: "Every property hand-picked for luxury, privacy, and breathtaking views.",
+    sub: "Every property hand-picked for luxury, privacy and breathtaking views.",
     img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/468010416.jpg?k=52548d40c3c3e53e0250b36941c54ed1b793184b00996e29f60dc45db4401574&o=",
   },
   {
@@ -49,12 +49,12 @@ export default function AuthVisual({ slide = 0 }: AuthVisualProps) {
       <div className="auth-visual__overlay" />
 
       <Link href="/" className="auth-visual__brand">
-        <div className="brand-icon">
+        {/* <div className="brand-icon">
           <svg viewBox="0 0 24 24">
             <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" />
             <path d="M9 22V12h6v10" />
           </svg>
-        </div>
+        </div> */}
         <span className="brand-name">VillaBaas</span>
       </Link>
 
