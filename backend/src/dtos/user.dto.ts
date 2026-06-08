@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { UserSchema } from "../types/user.type";
-
+import { UserSchema } from "../types/user.types";
 // Register DTO — pick only what the client should send
 export const RegisterUserDTO = UserSchema.pick({
     firstName: true,

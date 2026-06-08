@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { UserType } from "../types/user.type";
-
+import { UserType } from "../types/user.types";
 export interface IUser extends UserType, Document {
     _id: mongoose.Types.ObjectId;
     createdAt: Date;
