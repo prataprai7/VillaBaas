@@ -6,57 +6,55 @@ interface AuthVisualProps {
 
 const slides = [
   {
-    headline: (
-      <>
-        Escape to your
-        <br />
-        <em>perfect villa</em>
-      </>
-    ),
-    sub: "Best Villa you can find in Nepal.",
-    img: "https://media.vrbo.com/lodging/118000000/117880000/117877700/117877678/68d2664f.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill",
+    headline: (<>Escape to your<br /><em>perfect villa</em></>),
+    sub: "Curated escapes — from Santorini cliffs to Bali rice terraces.",
+    img: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=900&q=80",
+    tag: "Featured Collection",
+    stat1: { value: "240+", label: "Luxury Villas" },
+    stat2: { value: "4.9★", label: "Avg. Rating" },
   },
   {
-    headline: (
-      <>
-        Private pools,
-        <br />
-        <em>endless skies</em>
-      </>
-    ),
-    sub: "Every property hand-picked for luxury, privacy and breathtaking views.",
-    img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/468010416.jpg?k=52548d40c3c3e53e0250b36941c54ed1b793184b00996e29f60dc45db4401574&o=",
-  },
-  {
-    headline: (
-      <>
-        Your dream stay
-        <br />
-        <em>awaits you</em>
-      </>
-    ),
-    sub: "Book in minutes. Arrive to perfection. Leave unforgettable memories.",
-    img: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?w=900&q=80",
+    headline: (<>Private pools,<br /><em>endless skies</em></>),
+    sub: "Every property hand-picked for luxury, privacy, and breathtaking views.",
+    img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=900&q=80",
+    tag: "Top Rated",
+    stat1: { value: "50+", label: "Destinations" },
+    stat2: { value: "98%", label: "Satisfaction" },
   },
 ];
 
 export default function AuthVisual({ slide = 0 }: AuthVisualProps) {
-  const { headline, sub, img } = slides[slide];
-
+  const { headline, sub, img, tag, stat1, stat2 } = slides[slide];
   return (
     <aside className="auth-visual">
       <img src={img} alt="Luxury villa" className="auth-visual__bg" />
       <div className="auth-visual__overlay" />
+      <div className="auth-visual__overlay2" />
+      <div className="auth-visual__corner" />
 
       <Link href="/" className="auth-visual__brand">
-        {/* <div className="brand-icon">
+        <div className="brand-icon">
           <svg viewBox="0 0 24 24">
             <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" />
             <path d="M9 22V12h6v10" />
           </svg>
-        </div> */}
+        </div>
         <span className="brand-name">VillaBaas</span>
       </Link>
+
+      <div className="auth-visual__tag">{tag}</div>
+
+      <div className="auth-visual__stats">
+        <div className="stat">
+          <span className="stat__value">{stat1.value}</span>
+          <span className="stat__label">{stat1.label}</span>
+        </div>
+        <div className="stat-divider" />
+        <div className="stat">
+          <span className="stat__value">{stat2.value}</span>
+          <span className="stat__label">{stat2.label}</span>
+        </div>
+      </div>
 
       <div className="auth-visual__copy">
         <h1 className="auth-visual__headline">{headline}</h1>

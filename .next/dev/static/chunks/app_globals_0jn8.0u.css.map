@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["file:///Users/pratap/frontend-web/app/globals.css"],"sourcesContent":["/* Global reset — all styles live in app/(auth)/styles/auth.css */\n*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\nhtml, body { height: 100%; }\nbody { background: #1A1A1A; display: flex; align-items: center; justify-content: center; min-height: 100vh; }\n"],"names":[],"mappings":"AACA;;;;;;AACA;;;;AACA"}}]
-}
