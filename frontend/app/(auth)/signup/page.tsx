@@ -87,7 +87,7 @@ export default function SignupPage() {
                 <input
                   id="firstName"
                   type="text"
-                  placeholder="Aarav"
+                  placeholder=""
                   autoComplete="given-name"
                   value={form.firstName}
                   onChange={(e) => setForm({ ...form, firstName: e.target.value })}
@@ -102,7 +102,7 @@ export default function SignupPage() {
                 <input
                   id="lastName"
                   type="text"
-                  placeholder="Sharma"
+                  placeholder=""
                   autoComplete="family-name"
                   value={form.lastName}
                   onChange={(e) => setForm({ ...form, lastName: e.target.value })}
@@ -118,7 +118,7 @@ export default function SignupPage() {
               <input
                 id="email"
                 type="email"
-                placeholder="hello@example.com"
+                placeholder=""
                 autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}

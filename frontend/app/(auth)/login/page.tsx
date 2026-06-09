@@ -79,7 +79,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
-                placeholder="hello@example.com"
+                placeholder=""
                 autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -126,7 +126,7 @@ export default function LoginPage() {
 
             <div className="field-row">
               <label className="checkbox-label">
-                <input type="checkbox" defaultChecked />
+                <input type="checkbox"  />
                 Remember Me
               </label>
               <Link href="/forgot-password" className="forgot-link">
