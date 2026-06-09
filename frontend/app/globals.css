@@ -1,4 +1,0 @@
-/* Global reset — all styles live in app/(auth)/styles/auth.css */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body { background: #1A1A1A; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
