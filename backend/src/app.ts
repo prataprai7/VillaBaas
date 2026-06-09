@@ -9,7 +9,7 @@ import userRoutes from "./routes/user.route";
 const app: Application = express();
 
 const corsOptions = {
-    origin: ["http://localhost:3000"], // Next.js frontend
+    origin: ["http://localhost:3000"],
     successStatus: 200,
     credentials: true,
 };
