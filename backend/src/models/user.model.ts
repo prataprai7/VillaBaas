@@ -1,25 +1,27 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { UserType } from "../types/user.types";
+
 export interface IUser extends UserType, Document {
     _id: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
+    profilePicture?: string;
 }
 
 const UserMongoSchema: Schema = new Schema<IUser>(
     {
-        firstName: { type: String, required: true },
-        lastName:  { type: String, required: true },
-        email:     { type: String, required: true, unique: true, lowercase: true, trim: true },
-        password:  { type: String, required: true },
-        role:      { type: String, enum: ["admin", "user"], default: "user" },
+        firstName:      { type: String, required: true },
+        lastName:       { type: String, required: true },
+        email:          { type: String, required: true, unique: true, lowercase: true, trim: true },
+        password:       { type: String, required: true },
+        role:           { type: String, enum: ["admin", "user"], default: "user" },
+        profilePicture: { type: String, default: null },
     },
     {
-        timestamps: true, // adds createdAt and updatedAt automatically
+        timestamps: true,
     }
 );
 
-// Remove password from JSON responses
 UserMongoSchema.methods.toJSON = function () {
     const obj = this.toObject();
     delete obj.password;

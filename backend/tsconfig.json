@@ -19,6 +19,6 @@
 
     "ignoreDeprecations": "6.0"
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "src/controllers/batch_controller.js"],
   "exclude": ["node_modules", "dist"]
 }
