@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthVisual from "../components/auth/AuthVisual";
-import { loginAction, LoginSchema } from "@/lib/actions/auth-action";
-
+import { loginAction } from "@/lib/actions/auth-action";
+import { LoginSchema } from "@/lib/validations/auth-schemas";
 interface FieldErrors {
   email?: string;
   password?: string;
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
     if (!result.success) {
       if (result.fieldErrors) setFieldErrors(result.fieldErrors as FieldErrors);
-      if (result.error)       setGlobalError(result.error);
+      if (result.message)       setGlobalError(result.message);
       return;
     }
 
