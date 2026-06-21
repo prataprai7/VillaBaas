@@ -1,9 +1,12 @@
+// ── CLIENT-SIDE cookie helpers (browser only) ─────────────────────────────────
+
 export const TOKEN_KEY = "villabaas_token";
 export const USER_KEY  = "villabaas_user";
-
-const MAX_AGE = 60 * 60 * 24 * 30;
+const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 export function setAuthCookies(token: string, user: object): void {
+    // httpOnly=false so JS can read USER_KEY for display
+    // token stored as regular cookie — proxy.ts reads it server-side via request headers
     document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=${MAX_AGE}; SameSite=Lax`;
     document.cookie = `${USER_KEY}=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${MAX_AGE}; SameSite=Lax`;
 }
