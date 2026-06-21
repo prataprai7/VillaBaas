@@ -8,7 +8,7 @@ const publicRoutes = ["/login", "/signup"];
 // Routes only admins can visit
 const adminRoutes = ["/admin"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     const token = request.cookies.get(TOKEN_KEY)?.value;
