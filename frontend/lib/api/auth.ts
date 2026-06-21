@@ -1,5 +1,4 @@
-import { AUTH_ENDPOINTS } from "./endpoints";
-
+import { AUTH_ENDPOINTS } from "./endpoint";
 export interface AuthUser {
     _id: string;
     firstName: string;

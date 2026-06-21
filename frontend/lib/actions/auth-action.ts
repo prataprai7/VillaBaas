@@ -4,7 +4,6 @@ import { z } from "zod";
 import { apiRegister, apiLogin, apiWhoami, apiUpdateProfile } from "../api/auth";
 import { setServerAuthCookies, getServerToken } from "../api/server-cookies";
 
-// ── Schemas ───────────────────────────────────────────────────────────────────
 
 export const RegisterSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
@@ -43,7 +42,6 @@ export type LoginInput          = z.infer<typeof LoginSchema>;
 export type UpdateProfileInput  = z.infer<typeof UpdateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
 
-// ── Result type ───────────────────────────────────────────────────────────────
 
 export interface ActionResult {
     success: boolean;
@@ -52,7 +50,6 @@ export interface ActionResult {
     fieldErrors?: Record<string, string>;
 }
 
-// ── Register ──────────────────────────────────────────────────────────────────
 
 export async function registerAction(input: RegisterInput): Promise<ActionResult> {
     const parsed = RegisterSchema.safeParse(input);
@@ -72,7 +69,6 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     }
 }
 
-// ── Login ─────────────────────────────────────────────────────────────────────
 
 export async function loginAction(input: LoginInput): Promise<ActionResult> {
     const parsed = LoginSchema.safeParse(input);
@@ -87,7 +83,6 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     try {
         const response = await apiLogin(parsed.data);
         const { user, token } = response.data;
-        // Save token + user in cookies (server-side so middleware can read them)
         await setServerAuthCookies(token, user);
         return { success: true, data: { user, token } };
     } catch (err: unknown) {
@@ -95,7 +90,6 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     }
 }
 
-// ── Whoami ────────────────────────────────────────────────────────────────────
 
 export async function whoamiAction(): Promise<ActionResult> {
     try {
@@ -108,13 +102,11 @@ export async function whoamiAction(): Promise<ActionResult> {
     }
 }
 
-// ── Update Profile ────────────────────────────────────────────────────────────
 
 export async function updateProfileAction(formData: FormData): Promise<ActionResult> {
     const token = await getServerToken();
     if (!token) return { success: false, message: "Not authenticated" };
 
-    // Validate text fields with Zod
     const textFields = {
         firstName: formData.get("firstName") as string | undefined,
         lastName:  formData.get("lastName")  as string | undefined,
@@ -132,9 +124,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     }
 
     try {
-        // Send FormData directly — multer handles the image on the backend
         const response = await apiUpdateProfile(token, formData);
-        // Refresh user cookie with updated data
         await setServerAuthCookies(token, response.data);
         return { success: true, data: response.data, message: "Profile updated successfully" };
     } catch (err: unknown) {
@@ -142,7 +132,6 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     }
 }
 
-// ── Change Password ───────────────────────────────────────────────────────────
 
 export async function changePasswordAction(input: { password: string; confirmPassword: string }): Promise<ActionResult> {
     const token = await getServerToken();
@@ -159,7 +148,6 @@ export async function changePasswordAction(input: { password: string; confirmPas
     }
 
     try {
-        // Reuse the update endpoint — only send password
         const formData = new FormData();
         formData.append("password", parsed.data.password);
         await apiUpdateProfile(token, formData);
