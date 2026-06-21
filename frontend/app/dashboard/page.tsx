@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getUserCookie, clearAuthCookies } from "@/lib/api/cookies";
 
@@ -97,7 +97,6 @@ const TESTIMONIALS = [
 
 const NAV_LINKS = ["Home", "Villas", "Experiences", "About"];
 
-// Full-bleed wrapper style — overrides any layout padding
 const fullBleed: React.CSSProperties = {
   width: "100vw",
   marginLeft: "calc(-50vw + 50%)",
@@ -106,14 +105,16 @@ const fullBleed: React.CSSProperties = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]               = useState<User | null>(null);
   const [destination, setDestination] = useState("Pokhara");
-  const [checkIn, setCheckIn] = useState("Mar 15, 2025");
-  const [checkOut, setCheckOut] = useState("Mar 18, 2025");
-  const [guests, setGuests] = useState(2);
-  const [email, setEmail] = useState("");
+  const [checkIn, setCheckIn]         = useState("Mar 15, 2025");
+  const [checkOut, setCheckOut]       = useState("Mar 18, 2025");
+  const [guests, setGuests]           = useState(2);
+  const [email, setEmail]             = useState("");
   const [footerEmail, setFooterEmail] = useState("");
   const [hoveredVilla, setHoveredVilla] = useState<string | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const stored = getUserCookie() as User | null;
@@ -121,16 +122,25 @@ export default function DashboardPage() {
     setUser(stored);
   }, [router]);
 
-  // Inject a global reset so no parent layout adds gaps
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
       html, body { margin: 0 !important; padding: 0 !important; overflow-x: hidden !important; }
       * { box-sizing: border-box; }
-      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
     `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(style); };
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   function handleLogout() {
@@ -200,29 +210,108 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Right */}
+        {/* Right — avatar with dropdown */}
         <div style={{ display: "flex", alignItems: "center", gap: "1.1rem" }}>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#666" strokeWidth="1.8">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
-          <div style={{
-            width: 34, height: 34, borderRadius: "50%",
-            background: "linear-gradient(135deg,#C9A96E,#e8c97a)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "0.78rem", fontWeight: 700, color: "#1a1a1a",
-            flexShrink: 0,
-          }}>
-            {user.firstName[0]}{user.lastName[0]}
+
+          {/* Avatar + dropdown wrapper */}
+          <div ref={dropdownRef} style={{ position: "relative" }}>
+            {/* Clickable avatar */}
+            <div
+              onClick={() => setDropdownOpen((v) => !v)}
+              style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: "linear-gradient(135deg,#C9A96E,#e8c97a)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "0.78rem", fontWeight: 700, color: "#1a1a1a",
+                flexShrink: 0, cursor: "pointer",
+                border: dropdownOpen ? "2.5px solid #C9A96E" : "2.5px solid transparent",
+                boxShadow: dropdownOpen ? "0 0 0 3px rgba(201,169,110,0.2)" : "none",
+                transition: "all 0.2s",
+              }}
+            >
+              {user.firstName[0]}{user.lastName[0]}
+            </div>
+
+            {/* Dropdown menu */}
+            {dropdownOpen && (
+              <div style={{
+                position: "absolute", top: "calc(100% + 12px)", right: 0,
+                background: "#fff", borderRadius: 14,
+                boxShadow: "0 8px 40px rgba(0,0,0,0.13)",
+                border: "1px solid #f0f0f0",
+                minWidth: 210, zIndex: 999,
+                overflow: "hidden",
+                animation: "fadeDown 0.15s ease",
+              }}>
+                <style>{`
+                  @keyframes fadeDown {
+                    from { opacity: 0; transform: translateY(-6px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                  }
+                `}</style>
+
+                {/* User info */}
+                <div style={{ padding: "14px 16px", borderBottom: "1px solid #f5f5f5" }}>
+                  <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#1a1a1a", marginBottom: 2 }}>
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p style={{ fontSize: "0.72rem", color: "#aaa" }}>{user.email}</p>
+                </div>
+
+                {/* ✅ FIXED: was missing the opening <a tag */}
+                <a
+                  href="/dashboard/profile"
+                  onClick={() => setDropdownOpen(false)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "12px 16px", textDecoration: "none",
+                    fontSize: "0.84rem", color: "#1a1a1a",
+                    background: "transparent", transition: "background 0.15s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#888" strokeWidth="1.8">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  My Profile
+                </a>
+
+                {/* Sign Out */}
+                <button
+                  onClick={() => { setDropdownOpen(false); handleLogout(); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    width: "100%", padding: "12px 16px",
+                    background: "transparent", border: "none",
+                    fontSize: "0.84rem", color: "#C0392B",
+                    cursor: "pointer", textAlign: "left",
+                    borderTop: "1px solid #f5f5f5",
+                    transition: "background 0.15s",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#fff5f5")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#C0392B" strokeWidth="1.8">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  Sign Out
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Welcome text */}
           <span style={{ fontSize: "0.83rem", color: "#555" }}>
-            Welcome, <strong style={{ color: "#1a1a1a" }}>{user.firstName} {user.lastName}</strong>
+            Welcome, <strong style={{ color: "#1a1a1a" }}>{user.firstName}</strong>
           </span>
-          <button onClick={handleLogout} style={{
-            background: "#1A1A1A", color: "#fff", border: "none",
-            borderRadius: "8px", padding: "9px 20px", fontSize: "0.82rem",
-            cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-            letterSpacing: "0.02em",
-          }}>Sign Out</button>
         </div>
       </nav>
 
@@ -233,12 +322,10 @@ export default function DashboardPage() {
           alt="Nepal luxury villa"
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         />
-        {/* Layered gradient for depth */}
         <div style={{
           position: "absolute", inset: 0,
           background: "linear-gradient(160deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 50%, rgba(10,6,2,0.72) 100%)",
         }} />
-        {/* Subtle warm vignette */}
         <div style={{
           position: "absolute", inset: 0,
           background: "radial-gradient(ellipse at 50% 100%, rgba(40,20,0,0.45) 0%, transparent 70%)",
@@ -280,48 +367,33 @@ export default function DashboardPage() {
 
           {/* Search bar */}
           <div style={{
-            display: "flex",
-            background: "#fff",
-            borderRadius: 14,
-            overflow: "hidden",
-            boxShadow: "0 16px 60px rgba(0,0,0,0.35)",
-            maxWidth: 720,
-            margin: "0 auto",
+            display: "flex", background: "#fff", borderRadius: 14,
+            overflow: "hidden", boxShadow: "0 16px 60px rgba(0,0,0,0.35)",
+            maxWidth: 720, margin: "0 auto",
           }}>
             {[
-              { label: "Destination", value: destination, onChange: (v: string) => setDestination(v), type: "text", flex: "1 1 180px" },
-              { label: "Check In", value: checkIn, onChange: (v: string) => setCheckIn(v), type: "text", flex: "1 1 130px" },
-              { label: "Check Out", value: checkOut, onChange: (v: string) => setCheckOut(v), type: "text", flex: "1 1 130px" },
-            ].map((field, i) => (
-              <div key={field.label} style={{
-                flex: field.flex, padding: "16px 20px",
-                borderRight: "1px solid #f0f0f0",
-              }}>
+              { label: "Destination", value: destination, onChange: (v: string) => setDestination(v), flex: "1 1 180px" },
+              { label: "Check In",    value: checkIn,     onChange: (v: string) => setCheckIn(v),     flex: "1 1 130px" },
+              { label: "Check Out",   value: checkOut,    onChange: (v: string) => setCheckOut(v),    flex: "1 1 130px" },
+            ].map((field) => (
+              <div key={field.label} style={{ flex: field.flex, padding: "16px 20px", borderRight: "1px solid #f0f0f0" }}>
                 <div style={{ fontSize: "0.6rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>
                   {field.label}
                 </div>
-                <input
-                  value={field.value}
-                  onChange={e => field.onChange(e.target.value)}
-                  style={{
-                    border: "none", outline: "none", fontSize: "0.9rem",
-                    color: "#1a1a1a", width: "100%", background: "transparent",
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                />
+                <input value={field.value} onChange={e => field.onChange(e.target.value)} style={{
+                  border: "none", outline: "none", fontSize: "0.9rem",
+                  color: "#1a1a1a", width: "100%", background: "transparent",
+                  fontFamily: "'DM Sans', sans-serif",
+                }} />
               </div>
             ))}
             <div style={{ flex: "0 0 80px", padding: "16px 18px", borderRight: "1px solid #f0f0f0" }}>
               <div style={{ fontSize: "0.6rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>Guests</div>
-              <input
-                type="number" value={guests} min={1}
-                onChange={e => setGuests(Number(e.target.value))}
-                style={{
-                  border: "none", outline: "none", fontSize: "0.9rem",
-                  color: "#1a1a1a", width: "100%", background: "transparent",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              />
+              <input type="number" value={guests} min={1} onChange={e => setGuests(Number(e.target.value))} style={{
+                border: "none", outline: "none", fontSize: "0.9rem",
+                color: "#1a1a1a", width: "100%", background: "transparent",
+                fontFamily: "'DM Sans', sans-serif",
+              }} />
             </div>
             <button style={{
               flex: "0 0 auto",
@@ -338,7 +410,6 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Trust badges */}
           <div style={{ display: "flex", justifyContent: "center", gap: "2rem", marginTop: "2rem" }}>
             {["500+ Villas", "Instant Booking", "24/7 Support"].map(b => (
               <span key={b} style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", gap: 5 }}>
@@ -366,40 +437,30 @@ export default function DashboardPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem" }}>
             {VILLAS.map((v) => (
-              <div
-                key={v.name}
+              <div key={v.name}
                 onMouseEnter={() => setHoveredVilla(v.name)}
                 onMouseLeave={() => setHoveredVilla(null)}
                 style={{
                   borderRadius: 18, overflow: "hidden",
-                  border: "1px solid #f0f0f0",
-                  background: "#fff",
-                  boxShadow: hoveredVilla === v.name
-                    ? "0 16px 48px rgba(0,0,0,0.13)"
-                    : "0 2px 14px rgba(0,0,0,0.06)",
+                  border: "1px solid #f0f0f0", background: "#fff",
+                  boxShadow: hoveredVilla === v.name ? "0 16px 48px rgba(0,0,0,0.13)" : "0 2px 14px rgba(0,0,0,0.06)",
                   transform: hoveredVilla === v.name ? "translateY(-4px)" : "translateY(0)",
-                  transition: "all 0.28s ease",
-                  cursor: "pointer",
+                  transition: "all 0.28s ease", cursor: "pointer",
                 }}>
                 <div style={{ position: "relative", overflow: "hidden" }}>
-                  <img
-                    src={v.img} alt={v.name}
-                    style={{
-                      width: "100%", height: 200, objectFit: "cover", display: "block",
-                      transform: hoveredVilla === v.name ? "scale(1.05)" : "scale(1)",
-                      transition: "transform 0.45s ease",
-                    }}
-                  />
+                  <img src={v.img} alt={v.name} style={{
+                    width: "100%", height: 200, objectFit: "cover", display: "block",
+                    transform: hoveredVilla === v.name ? "scale(1.05)" : "scale(1)",
+                    transition: "transform 0.45s ease",
+                  }} />
                   {v.badge && (
                     <span style={{
                       position: "absolute", top: 13, left: 13,
                       background: "#fff", borderRadius: 100, padding: "4px 12px",
                       fontSize: "0.63rem", fontWeight: 700, color: "#1a1a1a",
-                      boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
-                      letterSpacing: "0.04em",
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.18)", letterSpacing: "0.04em",
                     }}>{v.badge}</span>
                   )}
-                  {/* Heart */}
                   <button style={{
                     position: "absolute", top: 13, right: 13,
                     background: "rgba(255,255,255,0.85)", border: "none",
@@ -412,43 +473,26 @@ export default function DashboardPage() {
                     </svg>
                   </button>
                 </div>
-
                 <div style={{ padding: "1.1rem 1.25rem 1.35rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.3rem" }}>
-                    <p style={{
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontSize: "1.1rem", fontWeight: 600, color: "#1a1a1a",
-                      lineHeight: 1.25,
-                    }}>{v.name}</p>
-                    <span style={{
-                      display: "flex", alignItems: "center", gap: 2,
-                      fontSize: "0.8rem", fontWeight: 600, color: "#1a1a1a",
-                      marginLeft: 8, flexShrink: 0,
-                    }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.1rem", fontWeight: 600, color: "#1a1a1a", lineHeight: 1.25 }}>{v.name}</p>
+                    <span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: "0.8rem", fontWeight: 600, color: "#1a1a1a", marginLeft: 8, flexShrink: 0 }}>
                       <span style={{ color: "#C9A96E" }}>★</span>{v.rating}
                     </span>
                   </div>
-
-                  <p style={{
-                    fontSize: "0.74rem", color: "#aaa", marginBottom: "1rem",
-                    display: "flex", alignItems: "center", gap: 4,
-                  }}>
+                  <p style={{ fontSize: "0.74rem", color: "#aaa", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 4 }}>
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#bbb" strokeWidth="2">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
                       <circle cx="12" cy="10" r="3"/>
                     </svg>
                     {v.loc}
                   </p>
-
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#1a1a1a" }}>{v.price}</span>
-                    </div>
+                    <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#1a1a1a" }}>{v.price}</span>
                     <button style={{
-                      background: "#1A1A1A", color: "#fff",
-                      border: "none", borderRadius: 8, padding: "7px 15px",
-                      fontSize: "0.74rem", cursor: "pointer",
-                      fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                      background: "#1A1A1A", color: "#fff", border: "none",
+                      borderRadius: 8, padding: "7px 15px", fontSize: "0.74rem",
+                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
                     }}>View Details</button>
                   </div>
                 </div>
@@ -462,7 +506,6 @@ export default function DashboardPage() {
               borderRadius: 10, padding: "12px 34px", fontSize: "0.86rem",
               cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
               color: "#1a1a1a", fontWeight: 500, letterSpacing: "0.02em",
-              transition: "border-color 0.2s",
             }}>View All Villas</button>
           </div>
         </div>
@@ -473,54 +516,30 @@ export default function DashboardPage() {
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2.5rem" }}>
             <div>
-              <p style={{ fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C9A96E", fontWeight: 600, marginBottom: "0.5rem" }}>
-                Limited Time
-              </p>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.9rem,3.5vw,2.6rem)", fontWeight: 400, marginBottom: "0.5rem" }}>
-                Exclusive Offers
-              </h2>
-              <p style={{ color: "#888", fontSize: "0.88rem", maxWidth: 360, lineHeight: 1.7 }}>
-                Take advantage of our limited-time offers to enhance your stay.
-              </p>
+              <p style={{ fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C9A96E", fontWeight: 600, marginBottom: "0.5rem" }}>Limited Time</p>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.9rem,3.5vw,2.6rem)", fontWeight: 400, marginBottom: "0.5rem" }}>Exclusive Offers</h2>
+              <p style={{ color: "#888", fontSize: "0.88rem", maxWidth: 360, lineHeight: 1.7 }}>Take advantage of our limited-time offers to enhance your stay.</p>
             </div>
             <a href="#" style={{ fontSize: "0.85rem", color: "#1a1a1a", textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
               View All Offers <span>→</span>
             </a>
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem" }}>
             {OFFERS.map((o) => (
-              <div key={o.title} style={{
-                position: "relative", borderRadius: 18, overflow: "hidden",
-                height: 280, cursor: "pointer",
-              }}
-              onMouseEnter={e => { (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1.06)"; }}
-              onMouseLeave={e => { (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1)"; }}
+              <div key={o.title} style={{ position: "relative", borderRadius: 18, overflow: "hidden", height: 280, cursor: "pointer" }}
+                onMouseEnter={e => { (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1.06)"; }}
+                onMouseLeave={e => { (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1)"; }}
               >
-                <img src={o.img} alt={o.title} style={{
-                  width: "100%", height: "100%", objectFit: "cover", display: "block",
-                  transition: "transform 0.5s ease",
-                }} />
-                <div style={{
-                  position: "absolute", inset: 0,
-                  background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.08) 55%)",
-                }} />
+                <img src={o.img} alt={o.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.5s ease" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.08) 55%)" }} />
                 <div style={{ position: "absolute", top: 16, left: 16 }}>
-                  <span style={{
-                    background: "#C9A96E", color: "#fff",
-                    borderRadius: 100, padding: "4px 12px",
-                    fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em",
-                  }}>{o.tag}</span>
+                  <span style={{ background: "#C9A96E", color: "#fff", borderRadius: 100, padding: "4px 12px", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{o.tag}</span>
                 </div>
                 <div style={{ position: "absolute", bottom: 20, left: 20, right: 20, color: "#fff" }}>
                   <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.3rem" }}>{o.title}</p>
                   <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.72)", marginBottom: "0.4rem", lineHeight: 1.5 }}>{o.desc}</p>
                   <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.45)", marginBottom: "0.9rem" }}>{o.expires}</p>
-                  <a href="#" style={{
-                    fontSize: "0.78rem", color: "#E8D5B0", fontWeight: 600,
-                    textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5,
-                    borderBottom: "1px solid rgba(232,213,176,0.4)", paddingBottom: 1,
-                  }}>View Offers →</a>
+                  <a href="#" style={{ fontSize: "0.78rem", color: "#E8D5B0", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5, borderBottom: "1px solid rgba(232,213,176,0.4)", paddingBottom: 1 }}>View Offers →</a>
                 </div>
               </div>
             ))}
@@ -530,15 +549,11 @@ export default function DashboardPage() {
 
       {/* ── STATS BAND ── */}
       <div style={{ ...fullBleed, background: "#1A1A1A", padding: "3.5rem 5vw" }}>
-        <div style={{
-          maxWidth: 1280, margin: "0 auto",
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "1rem", textAlign: "center",
-        }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", textAlign: "center" }}>
           {[
             { num: "500+", label: "Luxury Villas" },
             { num: "12K+", label: "Happy Guests" },
-            { num: "14", label: "Districts Covered" },
+            { num: "14",   label: "Districts Covered" },
             { num: "4.9★", label: "Average Rating" },
           ].map(s => (
             <div key={s.label}>
@@ -553,31 +568,21 @@ export default function DashboardPage() {
       <div style={{ ...fullBleed, background: "#fff", padding: "5.5rem 5vw" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-            <p style={{ fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C9A96E", fontWeight: 600, marginBottom: "0.6rem" }}>
-              Guest Stories
-            </p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.9rem,3.5vw,2.8rem)", fontWeight: 400, marginBottom: "0.7rem" }}>
-              What Our Guests Say
-            </h2>
+            <p style={{ fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C9A96E", fontWeight: 600, marginBottom: "0.6rem" }}>Guest Stories</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.9rem,3.5vw,2.8rem)", fontWeight: 400, marginBottom: "0.7rem" }}>What Our Guests Say</h2>
             <p style={{ color: "#888", fontSize: "0.93rem", maxWidth: 420, margin: "0 auto", lineHeight: 1.75 }}>
               Discover why discerning travellers choose VillaBaas for their Nepal experiences.
             </p>
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem" }}>
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} style={{
-                background: "#fafafa", border: "1px solid #f0f0f0",
-                borderRadius: 18, padding: "1.75rem",
-              }}>
+              <div key={t.name} style={{ background: "#fafafa", border: "1px solid #f0f0f0", borderRadius: 18, padding: "1.75rem" }}>
                 <div style={{ display: "flex", marginBottom: "0.9rem" }}>
                   {Array.from({ length: t.stars }).map((_, i) => (
                     <span key={i} style={{ color: "#C9A96E", fontSize: "0.95rem" }}>★</span>
                   ))}
                 </div>
-                <p style={{ fontSize: "0.88rem", color: "#444", lineHeight: 1.8, marginBottom: "1.4rem", fontStyle: "italic" }}>
-                  "{t.text}"
-                </p>
+                <p style={{ fontSize: "0.88rem", color: "#444", lineHeight: 1.8, marginBottom: "1.4rem", fontStyle: "italic" }}>"{t.text}"</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <img src={t.avatar} alt={t.name} style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover" }} />
                   <div>
@@ -604,10 +609,8 @@ export default function DashboardPage() {
               <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
           </div>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 400, marginBottom: "0.8rem" }}>
-            Stay Inspired
-          </h2>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.92rem", lineHeight: 1.8, marginBottom: "2.2rem", maxWidth: 420, margin: "0 auto 2.2rem" }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 400, marginBottom: "0.8rem" }}>Stay Inspired</h2>
+          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.92rem", lineHeight: 1.8, maxWidth: 420, margin: "0 auto 2.2rem" }}>
             Join our newsletter and be the first to discover new villa listings, exclusive offers, and travel inspiration across Nepal.
           </p>
           <div style={{
@@ -616,26 +619,16 @@ export default function DashboardPage() {
             border: "1px solid rgba(255,255,255,0.12)",
             background: "rgba(255,255,255,0.06)",
           }}>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={{
-                flex: 1, padding: "13px 18px",
-                background: "transparent", border: "none", outline: "none",
-                color: "#fff", fontSize: "0.88rem",
-                fontFamily: "'DM Sans', sans-serif",
-              }}
-            />
+            <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} style={{
+              flex: 1, padding: "13px 18px", background: "transparent",
+              border: "none", outline: "none", color: "#fff", fontSize: "0.88rem",
+              fontFamily: "'DM Sans', sans-serif",
+            }} />
             <button style={{
               background: "#C9A96E", border: "none", color: "#1a1a1a",
               padding: "0 24px", fontSize: "0.85rem", fontWeight: 700,
-              cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              letterSpacing: "0.03em",
-            }}>
-              Subscribe →
-            </button>
+              cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em",
+            }}>Subscribe →</button>
           </div>
           <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.28)", marginTop: "1.1rem" }}>
             By subscribing, you agree to our Privacy Policy and consent to receive updates.
@@ -647,15 +640,9 @@ export default function DashboardPage() {
       <footer style={{ ...fullBleed, background: "#0f0f0f", color: "rgba(255,255,255,0.5)", padding: "4rem 5vw 2rem" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1.6fr", gap: "3rem", marginBottom: "3rem" }}>
-            {/* Brand */}
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: "0.9rem" }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  background: "linear-gradient(135deg,#2d2517,#1A1A1A)",
-                  border: "1px solid rgba(201,169,110,0.4)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#2d2517,#1A1A1A)", border: "1px solid rgba(201,169,110,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#E8D5B0" strokeWidth="1.6">
                     <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
                     <path d="M9 22V12h6v10"/>
@@ -668,65 +655,36 @@ export default function DashboardPage() {
               </p>
               <div style={{ display: "flex", gap: 14 }}>
                 {["IG", "TW", "FB", "IN"].map(s => (
-                  <a key={s} href="#" style={{
-                    fontSize: "0.68rem", color: "rgba(255,255,255,0.35)",
-                    textDecoration: "none", fontWeight: 700, letterSpacing: "0.05em",
-                  }}>{s}</a>
+                  <a key={s} href="#" style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", textDecoration: "none", fontWeight: 700, letterSpacing: "0.05em" }}>{s}</a>
                 ))}
               </div>
             </div>
-
-            {/* Company */}
             <div>
               <p style={{ fontSize: "0.68rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: "1rem" }}>Company</p>
               {["About", "Careers", "Press", "Blog", "Partners"].map(l => (
                 <a key={l} href="#" style={{ display: "block", fontSize: "0.82rem", color: "rgba(255,255,255,0.5)", textDecoration: "none", marginBottom: "0.6rem" }}>{l}</a>
               ))}
             </div>
-
-            {/* Support */}
             <div>
               <p style={{ fontSize: "0.68rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: "1rem" }}>Support</p>
               {["Help Center", "Safety Info", "Cancellations", "Contact Us", "Accessibility"].map(l => (
                 <a key={l} href="#" style={{ display: "block", fontSize: "0.82rem", color: "rgba(255,255,255,0.5)", textDecoration: "none", marginBottom: "0.6rem" }}>{l}</a>
               ))}
             </div>
-
-            {/* Stay Updated */}
             <div>
               <p style={{ fontSize: "0.68rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: "1rem" }}>Stay Updated</p>
-              <p style={{ fontSize: "0.8rem", lineHeight: 1.7, marginBottom: "1rem" }}>
-                Subscribe for villa inspiration and special offers.
-              </p>
+              <p style={{ fontSize: "0.8rem", lineHeight: 1.7, marginBottom: "1rem" }}>Subscribe for villa inspiration and special offers.</p>
               <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  value={footerEmail}
-                  onChange={e => setFooterEmail(e.target.value)}
-                  style={{
-                    flex: 1, padding: "10px 13px",
-                    background: "rgba(255,255,255,0.05)",
-                    border: "none", outline: "none",
-                    color: "#fff", fontSize: "0.8rem",
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                />
-                <button style={{
-                  background: "rgba(201,169,110,0.2)", border: "none",
-                  padding: "0 14px", color: "#C9A96E",
-                  cursor: "pointer", fontSize: "1.1rem",
-                }}>→</button>
+                <input type="email" placeholder="Your email" value={footerEmail} onChange={e => setFooterEmail(e.target.value)} style={{
+                  flex: 1, padding: "10px 13px", background: "rgba(255,255,255,0.05)",
+                  border: "none", outline: "none", color: "#fff", fontSize: "0.8rem",
+                  fontFamily: "'DM Sans', sans-serif",
+                }} />
+                <button style={{ background: "rgba(201,169,110,0.2)", border: "none", padding: "0 14px", color: "#C9A96E", cursor: "pointer", fontSize: "1.1rem" }}>→</button>
               </div>
             </div>
           </div>
-
-          <div style={{
-            borderTop: "1px solid rgba(255,255,255,0.07)",
-            paddingTop: "1.5rem",
-            display: "flex", justifyContent: "space-between",
-            fontSize: "0.72rem", color: "rgba(255,255,255,0.28)",
-          }}>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: "1.5rem", display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "rgba(255,255,255,0.28)" }}>
             <span>© 2025 VillaBaas. All rights reserved.</span>
             <div style={{ display: "flex", gap: "1.5rem" }}>
               {["Privacy", "Terms", "Cookies"].map(l => (
