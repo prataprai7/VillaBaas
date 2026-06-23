@@ -122,6 +122,16 @@ export default function DashboardPage() {
     setUser(stored);
   }, [router]);
 
+    useEffect(() => {
+    if (user === null) {
+      // give AuthContext time to load from cookie
+      const t = setTimeout(() => {
+        if (!user) router.replace("/login");
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  }, [user, router]);
+
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
@@ -149,6 +159,8 @@ export default function DashboardPage() {
   }
 
   if (!user) return null;
+
+  
 
   return (
     <div style={{
