@@ -4,13 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthVisual from "../components/auth/AuthVisual";
-import { registerAction, RegisterSchema } from "@/lib/actions/auth-action";
+import { registerAction } from "@/lib/actions/auth-action";
+// FIX: import schema from validations, not from auth-action, to avoid
+// pulling a "use server" module into a client component
+import { RegisterSchema } from "@/lib/validations/auth-schemas";
 
 interface FieldErrors {
   firstName?: string;
-  lastName?: string;
-  email?: string;
-  password?: string;
+  lastName?:  string;
+  email?:     string;
+  password?:  string;
 }
 
 export default function SignupPage() {
@@ -24,8 +27,8 @@ export default function SignupPage() {
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [globalError, setGlobalError] = useState("");
-  const [isPending, setIsPending]     = useState(false);
-  const [showPw, setShowPw]           = useState(false);
+  const [isPending,   setIsPending]   = useState(false);
+  const [showPw,      setShowPw]      = useState(false);
 
   function handleBlur(field: keyof typeof form) {
     const result = RegisterSchema.shape[field].safeParse(form[field]);
@@ -51,6 +54,7 @@ export default function SignupPage() {
       return;
     }
 
+    // FIX: disable immediately to prevent double-submit
     setIsPending(true);
     const result = await registerAction(parsed.data);
     setIsPending(false);
@@ -58,6 +62,7 @@ export default function SignupPage() {
     if (!result.success) {
       if (result.fieldErrors) setFieldErrors(result.fieldErrors as FieldErrors);
       if (result.error)       setGlobalError(result.error);
+      if (result.message && !result.error) setGlobalError(result.message);
       return;
     }
 
@@ -75,10 +80,14 @@ export default function SignupPage() {
         </div>
 
         <div className="auth-form-panel__inner">
-          <h2 className="auth-heading">Create your<br />VillaBaas account</h2>
+          <h2 className="auth-heading">
+            Create your<br />VillaBaas account
+          </h2>
           <p className="auth-subheading">Start booking luxury villas today</p>
 
-          {globalError && <div className="form-error-banner">{globalError}</div>}
+          {globalError && (
+            <div className="form-error-banner">{globalError}</div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="field-grid">
@@ -94,7 +103,9 @@ export default function SignupPage() {
                   onBlur={() => handleBlur("firstName")}
                   className={fieldErrors.firstName ? "input-error" : ""}
                 />
-                {fieldErrors.firstName && <p className="field-error">{fieldErrors.firstName}</p>}
+                {fieldErrors.firstName && (
+                  <p className="field-error">{fieldErrors.firstName}</p>
+                )}
               </div>
 
               <div className="field">
@@ -109,7 +120,9 @@ export default function SignupPage() {
                   onBlur={() => handleBlur("lastName")}
                   className={fieldErrors.lastName ? "input-error" : ""}
                 />
-                {fieldErrors.lastName && <p className="field-error">{fieldErrors.lastName}</p>}
+                {fieldErrors.lastName && (
+                  <p className="field-error">{fieldErrors.lastName}</p>
+                )}
               </div>
             </div>
 
@@ -125,7 +138,9 @@ export default function SignupPage() {
                 onBlur={() => handleBlur("email")}
                 className={fieldErrors.email ? "input-error" : ""}
               />
-              {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
+              {fieldErrors.email && (
+                <p className="field-error">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div className="field field--password">
@@ -160,11 +175,17 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
-              {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
+              {fieldErrors.password && (
+                <p className="field-error">{fieldErrors.password}</p>
+              )}
             </div>
 
             <button type="submit" className="btn-primary" disabled={isPending}>
-              {isPending ? <><span className="spinner" /> Creating account…</> : "Create Account"}
+              {isPending ? (
+                <><span className="spinner" /> Creating account…</>
+              ) : (
+                "Create Account"
+              )}
             </button>
           </form>
 
@@ -195,7 +216,8 @@ export default function SignupPage() {
           </p>
 
           <p className="auth-switch" style={{ marginTop: "0.75rem" }}>
-            Already have an account?&nbsp;<Link href="/login">Sign In</Link>
+            Already have an account?&nbsp;
+            <Link href="/login">Sign In</Link>
           </p>
         </div>
       </div>

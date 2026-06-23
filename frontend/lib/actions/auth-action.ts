@@ -7,21 +7,27 @@ import {
   LoginSchema,
   UpdateProfileSchema,
   ChangePasswordSchema,
-  RegisterInput,
-  LoginInput,
 } from "../validations/auth-schemas";
 
-// Re-export types so existing imports from auth-action still work
-export type {
-  RegisterInput,
-  LoginInput,
-} from "../validations/auth-schemas";
+
+// Define types inline — avoids RSC boundary stripping export type
+export type RegisterInput = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+
+export type LoginInput = {
+  email: string;
+  password: string;
+};
 
 export interface ActionResult {
   success: boolean;
   message?: string;
   error?: string;
-  data?: any;
+  data?: unknown;
   fieldErrors?: Record<string, string>;
 }
 
@@ -103,9 +109,10 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   }
 }
 
-export async function changePasswordAction(
-  input: { password: string; confirmPassword: string }
-): Promise<ActionResult> {
+export async function changePasswordAction(input: {
+  password: string;
+  confirmPassword: string;
+}): Promise<ActionResult> {
   const token = await getServerToken();
   if (!token) return { success: false, message: "Not authenticated" };
 
@@ -120,9 +127,9 @@ export async function changePasswordAction(
   }
 
   try {
-    const formData = new FormData();
-    formData.append("password", parsed.data.password);
-    await apiUpdateProfile(token, formData);
+    const fd = new FormData();
+    fd.append("password", parsed.data.password);
+    await apiUpdateProfile(token, fd);
     return { success: true, message: "Password changed successfully" };
   } catch (err: unknown) {
     return { success: false, message: err instanceof Error ? err.message : "Password change failed" };
