@@ -5,20 +5,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthVisual from "../components/auth/AuthVisual";
 import { loginAction } from "@/lib/actions/auth-action";
+// FIX: import schema from validations, not from auth-action, to avoid
+// pulling a "use server" module into a client component
 import { LoginSchema } from "@/lib/validations/auth-schemas";
+
 interface FieldErrors {
-  email?: string;
+  email?:    string;
   password?: string;
 }
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const [form, setForm]               = useState({ email: "", password: "" });
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [globalError, setGlobalError] = useState("");
-  const [isPending, setIsPending]     = useState(false);
-  const [showPw, setShowPw]           = useState(false);
+  const [form,         setForm]         = useState({ email: "", password: "" });
+  const [fieldErrors,  setFieldErrors]  = useState<FieldErrors>({});
+  const [globalError,  setGlobalError]  = useState("");
+  const [isPending,    setIsPending]    = useState(false);
+  const [showPw,       setShowPw]       = useState(false);
 
   function handleBlur(field: keyof typeof form) {
     const result = LoginSchema.shape[field].safeParse(form[field]);
@@ -44,13 +47,14 @@ export default function LoginPage() {
       return;
     }
 
+    // FIX: disable button immediately to prevent double-submit
     setIsPending(true);
     const result = await loginAction(parsed.data);
     setIsPending(false);
 
     if (!result.success) {
       if (result.fieldErrors) setFieldErrors(result.fieldErrors as FieldErrors);
-      if (result.message)       setGlobalError(result.message);
+      if (result.message)     setGlobalError(result.message);
       return;
     }
 
@@ -68,10 +72,14 @@ export default function LoginPage() {
         </div>
 
         <div className="auth-form-panel__inner">
-          <h2 className="auth-heading">Welcome back<br />to VillaBaas!</h2>
+          <h2 className="auth-heading">
+            Welcome back<br />to VillaBaas!
+          </h2>
           <p className="auth-subheading">Sign in to your account</p>
 
-          {globalError && <div className="form-error-banner">{globalError}</div>}
+          {globalError && (
+            <div className="form-error-banner">{globalError}</div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="field">
@@ -86,7 +94,9 @@ export default function LoginPage() {
                 onBlur={() => handleBlur("email")}
                 className={fieldErrors.email ? "input-error" : ""}
               />
-              {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
+              {fieldErrors.email && (
+                <p className="field-error">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div className="field field--password">
@@ -121,12 +131,14 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
-              {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
+              {fieldErrors.password && (
+                <p className="field-error">{fieldErrors.password}</p>
+              )}
             </div>
 
             <div className="field-row">
               <label className="checkbox-label">
-                <input type="checkbox"  />
+                <input type="checkbox" />
                 Remember Me
               </label>
               <Link href="/forgot-password" className="forgot-link">
@@ -135,7 +147,11 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" className="btn-primary" disabled={isPending}>
-              {isPending ? <><span className="spinner" /> Signing in…</> : "Login"}
+              {isPending ? (
+                <><span className="spinner" /> Signing in…</>
+              ) : (
+                "Login"
+              )}
             </button>
           </form>
 
@@ -160,7 +176,8 @@ export default function LoginPage() {
           </div>
 
           <p className="auth-switch">
-            Don&apos;t have an account?&nbsp;<Link href="/signup">Register</Link>
+            Don&apos;t have an account?&nbsp;
+            <Link href="/signup">Register</Link>
           </p>
         </div>
       </div>
