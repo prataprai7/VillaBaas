@@ -1,17 +1,12 @@
 import { NextResponse, NextRequest } from "next/server";
 
 const TOKEN_KEY = "villabaas_token";
-
-// Routes anyone can visit without a token
 const publicRoutes = ["/login", "/signup"];
-
-// Routes only admins can visit
-const adminRoutes = ["/admin"];
+const adminRoutes  = ["/admin"];
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
-
-    const token = request.cookies.get(TOKEN_KEY)?.value;
+    const token   = request.cookies.get(TOKEN_KEY)?.value;
     const userRaw = request.cookies.get("villabaas_user")?.value;
 
     let user: { role?: string } | null = null;
@@ -19,21 +14,18 @@ export async function proxy(request: NextRequest) {
         try { user = JSON.parse(decodeURIComponent(userRaw)); } catch {}
     }
 
-    const isPublicRoute = publicRoutes.some((r) => pathname.startsWith(r));
-    const isAdminRoute  = adminRoutes.some((r) => pathname.startsWith(r));
+    const isPublic = publicRoutes.some(r => pathname.startsWith(r));
+    const isAdmin  = adminRoutes.some(r => pathname.startsWith(r));
 
-    // Not logged in → redirect to login (except on public routes)
-    if (!token && !isPublicRoute) {
+    if (!token && !isPublic) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // Admin route but user is not admin
-    if (token && user && isAdminRoute && user.role !== "admin") {
+    if (token && isAdmin && user?.role !== "admin") {
         return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
-    // Already logged in → redirect away from login/signup
-    if (token && isPublicRoute) {
+    if (token && isPublic) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
@@ -41,10 +33,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: [
-        "/login",
-        "/signup",
-        "/dashboard/:path*",
-        "/admin/:path*",
-    ],
+    matcher: ["/login", "/signup", "/dashboard/:path*", "/admin/:path*"],
 };
