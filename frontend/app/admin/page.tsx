@@ -1,3 +1,4 @@
+"use client";
 export default function AdminPage() {
     return (
         <div style={{ maxWidth: 900, margin: "0 auto" }}>

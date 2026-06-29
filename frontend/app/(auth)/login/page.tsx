@@ -58,7 +58,12 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    const user = (result.data as { user: { role: string } })?.user;
+    if (user?.role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/dashboard");
+    }
   }
 
   return (
