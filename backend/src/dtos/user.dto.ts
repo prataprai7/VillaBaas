@@ -15,6 +15,15 @@ export const LoginUserDTO = UserSchema.pick({
 });
 export type LoginUserDTO = z.infer<typeof LoginUserDTO>;
 
-// All fields optional for partial update
 export const UpdateUserDTO = UserSchema.partial();
 export type UpdateUserDTO = z.infer<typeof UpdateUserDTO>;
+
+export const CreateUserDTOAdmin = UserSchema.pick({
+    firstName: true,
+    lastName:  true,
+    email:     true,
+    username:  true,
+    password:  true,
+    role:      true,
+});
+export type CreateUserDTOAdmin = z.infer<typeof CreateUserDTOAdmin>;
