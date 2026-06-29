@@ -5,29 +5,23 @@ import path from "path";
 import { HttpException } from "./exceptions/http-exception";
 import { ApiResponseHelper } from "./utils/apihelper.util";
 import userRoutes from "./routes/user.route";
+import adminUserRoutes from "./routes/admin/user.route";
 
 const app: Application = express();
 
-app.use(cors({
-    origin: ["http://localhost:3000"],
-    credentials: true,
-}));
+app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
-
-// Serve uploaded images statically
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// Routes
-app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/auth",         userRoutes);
+app.use("/api/v1/admin/users",  adminUserRoutes);
 
-// 404
 app.use((req: Request, res: Response) => {
     return res.status(404).json({ message: "API not found" });
 });
 
-// Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error("Error:", err);
     if (err instanceof HttpException) {

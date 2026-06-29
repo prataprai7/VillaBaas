@@ -12,6 +12,7 @@ const UserMongoSchema: Schema = new Schema<IUser>(
         firstName:    { type: String, required: true },
         lastName:     { type: String, required: true },
         email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
+        username:     { type: String, required: false, unique: true, sparse: true, trim: true },
         password:     { type: String, required: true },
         role:         { type: String, enum: ["admin", "user"], default: "user" },
         profileImage: { type: String, required: false },
@@ -19,7 +20,6 @@ const UserMongoSchema: Schema = new Schema<IUser>(
     { timestamps: true }
 );
 
-// Remove password from JSON responses
 UserMongoSchema.methods.toJSON = function () {
     const obj = this.toObject();
     delete obj.password;
