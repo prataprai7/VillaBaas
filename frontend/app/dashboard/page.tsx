@@ -95,7 +95,12 @@ const TESTIMONIALS = [
   },
 ];
 
-const NAV_LINKS = ["Home", "Villas", "Experiences", "About"];
+const NAV_LINKS = [
+    { label: "Home",        href: "/dashboard" },
+    { label: "Villas",      href: "/dashboard/villas" },
+    { label: "Experiences", href: "#" },
+    { label: "About",       href: "#" },
+];
 
 
 const fullBleed: React.CSSProperties = {
@@ -210,18 +215,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Nav links */}
-        <div style={{ display: "flex", gap: "2.2rem" }}>
-          {NAV_LINKS.map((l) => (
-            <a key={l} href="#" style={{
-              fontSize: "0.88rem", color: "#555",
-              textDecoration: "none", fontWeight: 400,
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#1a1a1a")}
-            onMouseLeave={e => (e.currentTarget.style.color = "#555")}
-            >{l}</a>
-          ))}
-        </div>
+        {NAV_LINKS.map((l) => (
+    <a key={l.label} href={l.href} style={{
+        fontSize: "0.88rem",
+        color: "#555",
+        textDecoration: "none",
+        fontWeight: 400,
+        transition: "color 0.2s",
+    }}
+    onMouseEnter={e => (e.currentTarget.style.color = "#1a1a1a")}
+    onMouseLeave={e => (e.currentTarget.style.color = "#555")}
+    >{l.label}</a>
+))}
 
         {/* Right — avatar with dropdown */}
         <div style={{ display: "flex", alignItems: "center", gap: "1.1rem" }}>
