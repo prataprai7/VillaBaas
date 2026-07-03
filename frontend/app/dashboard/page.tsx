@@ -97,6 +97,7 @@ const TESTIMONIALS = [
 
 const NAV_LINKS = ["Home", "Villas", "Experiences", "About"];
 
+
 const fullBleed: React.CSSProperties = {
   width: "100vw",
   marginLeft: "calc(-50vw + 50%)",
@@ -273,7 +274,7 @@ export default function DashboardPage() {
                   <p style={{ fontSize: "0.72rem", color: "#aaa" }}>{user.email}</p>
                 </div>
 
-                {/* ✅ FIXED: was missing the opening <a tag */}
+                {/*  FIXED: was missing the opening <a tag */}
                 <a
                   href="/dashboard/profile"
                   onClick={() => setDropdownOpen(false)}

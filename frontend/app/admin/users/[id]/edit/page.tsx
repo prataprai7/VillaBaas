@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { handleGetUserById } from "@/lib/actions/admin/user-action";
-import UserFormEdit from "../../_components/UserFormEdit";
+// import UserFormCreate from "../../_components/UserFormCreate";
+import UserFormEdit from "@/app/admin/_components/UserFormEdit";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
