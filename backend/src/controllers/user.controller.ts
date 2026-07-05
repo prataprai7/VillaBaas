@@ -33,7 +33,6 @@ export class UserController {
         }
     }
 
-    // GET /api/v1/auth/whoami — requires authorizedMiddleware
     async whoami(req: Request, res: Response) {
         try {
             const user = req.user;
@@ -44,7 +43,6 @@ export class UserController {
         }
     }
 
-    // PUT /api/v1/auth/update — requires authorizedMiddleware + multer
     async updateUser(req: Request, res: Response) {
         try {
             const userId = (req.user as any)._id;
@@ -52,7 +50,6 @@ export class UserController {
             if (!parsed.success) {
                 return ApiResponseHelper.error(res, z.prettifyError(parsed.error), 400);
             }
-            // Attach uploaded image path if present
             if (req.file) {
                 parsed.data.profileImage = "/uploads/" + req.file.filename;
             }
@@ -60,6 +57,33 @@ export class UserController {
             return ApiResponseHelper.success(res, updatedUser, "Profile updated successfully");
         } catch (error: any) {
             return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
+        }
+    }
+
+
+    async uploadProfilePicture(req: Request, res: Response) {
+        try {
+            if (!req.file) {
+                return ApiResponseHelper.error(res, "No file uploaded", 400);
+            }
+            const userId = (req.user as any)._id.toString();
+            const profileImagePath = "/uploads/" + req.file.filename;
+
+            await userService.updateUser(userId, {
+                profileImage: profileImagePath,
+            });
+
+            return ApiResponseHelper.success(
+                res,
+                { profilePicture: profileImagePath },
+                "Profile picture updated successfully"
+            );
+        } catch (error: any) {
+            return ApiResponseHelper.error(
+                res,
+                error.message || "Internal Server Error",
+                error.status || 500
+            );
         }
     }
 }
