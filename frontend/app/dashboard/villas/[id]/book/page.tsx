@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getTokenCookie } from "@/lib/api/cookies";
 
@@ -33,15 +33,16 @@ function fmtDate(d: string) {
   return date.toLocaleDateString("en-NP", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
-export default function BookingConfirmPage({ params }: { params: { id: string } }) {
-  const router      = useRouter();
+export default function BookingConfirmPage() {
+  const router       = useRouter();
   const searchParams = useSearchParams();
+  const params       = useParams();
   const { user, logout } = useAuth();
 
   const checkIn  = searchParams.get("checkIn")  || "";
   const checkOut = searchParams.get("checkOut") || "";
   const guests   = Number(searchParams.get("guests") || 1);
-  const villaId  = Number(params.id);
+  const villaId  = Number(Array.isArray(params?.id) ? params.id[0] : params?.id);
 
   const villa = VILLAS.find(v => v.id === villaId)!;
 

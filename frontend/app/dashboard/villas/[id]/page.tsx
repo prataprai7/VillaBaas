@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
@@ -514,14 +514,14 @@ function handleBook() {
               { icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M9 6 C9 3 15 3 15 6 L15 12 L9 12 Z"/><path d="M3 12h18v3a6 6 0 01-6 6H9a6 6 0 01-6-6v-3z"/></svg>, value: String(villa.baths), label: "Bathrooms" },
               { icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>, value: String(villa.guests), label: "Max Guests" },
             ].map((s, i) => (
-              <>
-                {i > 0 && <div key={`d${i}`} style={{ background: "#f0f0f0", height: "100%" }} />}
-                <div key={s.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1.25rem", gap: 6 }}>
-                  {s.icon}
-                  <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1C1C1C" }}>{s.value}</span>
-                  <span style={{ fontSize: "0.72rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</span>
-                </div>
-              </>
+              <React.Fragment key={s.label}>
+    {i > 0 && <div style={{ background: "#f0f0f0", height: "100%" }} />}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1.25rem", gap: 6 }}>
+      {s.icon}
+      <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1C1C1C" }}>{s.value}</span>
+      <span style={{ fontSize: "0.72rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</span>
+    </div>
+  </React.Fragment>
             ))}
           </div>
 
