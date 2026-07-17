@@ -1,5 +1,7 @@
 "use client";
 
+const BRAND_RED = "#DA0B00";
+
 export default function AdminPage() {
     const cards = [
         {
@@ -7,7 +9,7 @@ export default function AdminPage() {
             label: "Users",
             desc: "Manage accounts, roles, and access permissions across the platform.",
             icon: (
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#C9A96E" strokeWidth="1.6">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={BRAND_RED} strokeWidth="1.8">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M23 21v-2a4 4 0 00-3-3.87"/>
@@ -18,14 +20,14 @@ export default function AdminPage() {
     ];
 
     return (
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-            <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#C9A96E", marginBottom: "0.6rem" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", fontFamily: "'DM Sans', sans-serif" }}>
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: BRAND_RED, marginBottom: "0.6rem" }}>
                 Welcome back
             </p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "2.4rem", fontWeight: 600, color: "#1a1a1a", marginBottom: "0.6rem" }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "2.2rem", fontWeight: 700, color: "#1C1C1C", marginBottom: "0.6rem" }}>
                 Admin Overview
             </h2>
-            <p style={{ fontSize: "0.9rem", color: "#999", marginBottom: "2.5rem", maxWidth: 480, lineHeight: 1.7 }}>
+            <p style={{ fontSize: "0.9rem", color: "#888", marginBottom: "2.5rem", maxWidth: 480, lineHeight: 1.7 }}>
                 Manage your VillaBaas platform from one place — users, roles, and access, all in a single dashboard.
             </p>
 
@@ -37,35 +39,35 @@ export default function AdminPage() {
                         borderRadius: 16,
                         textDecoration: "none",
                         background: "#fff",
-                        border: "1px solid #ebebeb",
+                        border: "1px solid #f0f0f0",
                         transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s",
                     }}
                     onMouseEnter={e => {
                         (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
-                        (e.currentTarget as HTMLElement).style.boxShadow = "0 14px 40px rgba(201,169,110,0.16)";
-                        (e.currentTarget as HTMLElement).style.borderColor = "#C9A96E";
+                        (e.currentTarget as HTMLElement).style.boxShadow = "0 14px 40px rgba(218,11,0,0.12)";
+                        (e.currentTarget as HTMLElement).style.borderColor = BRAND_RED;
                     }}
                     onMouseLeave={e => {
                         (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                         (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                        (e.currentTarget as HTMLElement).style.borderColor = "#ebebeb";
+                        (e.currentTarget as HTMLElement).style.borderColor = "#f0f0f0";
                     }}
                     >
                         <div style={{
                             width: 46, height: 46, borderRadius: 12,
-                            background: "rgba(201,169,110,0.1)",
+                            background: "rgba(218,11,0,0.08)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             marginBottom: "1.1rem",
                         }}>
                             {icon}
                         </div>
-                        <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", fontWeight: 600, color: "#1a1a1a", marginBottom: "0.5rem" }}>
+                        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.3rem", fontWeight: 700, color: "#1C1C1C", marginBottom: "0.5rem" }}>
                             {label}
                         </h3>
-                        <p style={{ fontSize: "0.85rem", color: "#999", lineHeight: 1.65, marginBottom: "1.25rem" }}>
+                        <p style={{ fontSize: "0.85rem", color: "#888", lineHeight: 1.65, marginBottom: "1.25rem" }}>
                             {desc}
                         </p>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.78rem", color: "#C9A96E", fontWeight: 700 }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.78rem", color: BRAND_RED, fontWeight: 700 }}>
                             Manage
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2">
                                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -75,6 +77,10 @@ export default function AdminPage() {
                     </a>
                 ))}
             </div>
+
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+            `}</style>
         </div>
     );
 }
