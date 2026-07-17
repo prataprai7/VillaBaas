@@ -3,6 +3,8 @@
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePathname } from "next/navigation";
 
+const BRAND_RED = "#DA0B00";
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
         <div style={{
@@ -10,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             height: "100vh",
             background: "#fff",
             fontFamily: "'DM Sans', sans-serif",
-            color: "#1a1a1a",
+            color: "#1C1C1C",
             margin: 0,
             padding: 0,
             width: "100%",
@@ -19,11 +21,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <AdminSidebar />
             <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, overflow: "hidden" }}>
                 <AdminHeader />
-                <main style={{ flex: 1, overflowY: "auto", padding: "2.5rem 3rem", background: "#fafaf8" }}>
+                <main style={{ flex: 1, overflowY: "auto", padding: "2.5rem 3rem", background: "#EEEEEE" }}>
                     {children}
                 </main>
                 <AdminFooter />
             </div>
+
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+            `}</style>
         </div>
     );
 }
@@ -39,7 +45,7 @@ function AdminSidebar() {
         {
             href: "/admin", label: "Overview", exact: true,
             icon: (
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <rect x="3" y="3" width="7" height="9" rx="1.5"/>
                     <rect x="14" y="3" width="7" height="5" rx="1.5"/>
                     <rect x="14" y="12" width="7" height="9" rx="1.5"/>
@@ -50,7 +56,7 @@ function AdminSidebar() {
         {
             href: "/admin/users", label: "Users",
             icon: (
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M23 21v-2a4 4 0 00-3-3.87"/>
@@ -66,8 +72,9 @@ function AdminSidebar() {
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
-            background: "linear-gradient(180deg, #1A1A1A 0%, #221c12 100%)",
-            color: "#fff",
+            background: "#fff",
+            borderRight: "1px solid #f0f0f0",
+            color: "#1C1C1C",
         }}>
             {/* Brand */}
             <div style={{
@@ -76,25 +83,24 @@ function AdminSidebar() {
                 alignItems: "center",
                 gap: 11,
                 padding: "0 1.5rem",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
+                borderBottom: "1px solid #f0f0f0",
             }}>
                 <div style={{
-                    width: 34, height: 34, borderRadius: "50%",
-                    background: "rgba(201,169,110,0.15)",
-                    border: "1px solid rgba(201,169,110,0.4)",
+                    width: 38, height: 38, borderRadius: "50%",
+                    background: BRAND_RED,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0,
                 }}>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#E8D5B0" strokeWidth="1.6">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" strokeWidth="1.8">
                         <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
                         <path d="M9 22V12h6v10"/>
                     </svg>
                 </div>
                 <div>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.05rem", fontWeight: 600, letterSpacing: "0.03em", lineHeight: 1.1 }}>
+                    <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.01em", lineHeight: 1.1, color: "#1C1C1C" }}>
                         VillaBaas
                     </p>
-                    <p style={{ fontSize: "0.6rem", color: "#C9A96E", letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700, marginTop: 2 }}>
+                    <p style={{ fontSize: "0.6rem", color: BRAND_RED, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700, marginTop: 2 }}>
                         Admin Panel
                     </p>
                 </div>
@@ -102,7 +108,7 @@ function AdminSidebar() {
 
             {/* Nav */}
             <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, padding: "1.25rem 1rem" }}>
-                <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", padding: "0 0.75rem", marginBottom: "0.5rem" }}>
+                <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#bbb", padding: "0 0.75rem", marginBottom: "0.5rem" }}>
                     Menu
                 </p>
                 {navItems.map(({ href, label, exact, icon }) => {
@@ -114,22 +120,22 @@ function AdminSidebar() {
                             borderRadius: 10,
                             fontSize: "0.85rem",
                             fontWeight: 500,
-                            color: active ? "#1a1a1a" : "rgba(255,255,255,0.65)",
-                            background: active ? "linear-gradient(135deg,#C9A96E,#e8c97a)" : "transparent",
+                            color: active ? "#fff" : "#666",
+                            background: active ? BRAND_RED : "transparent",
                             textDecoration: "none",
                             transition: "background 0.18s, color 0.18s",
-                            boxShadow: active ? "0 4px 14px rgba(201,169,110,0.3)" : "none",
+                            boxShadow: active ? "0 4px 14px rgba(218,11,0,0.25)" : "none",
                         }}
                         onMouseEnter={e => {
                             if (!active) {
-                                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
-                                (e.currentTarget as HTMLElement).style.color = "#fff";
+                                (e.currentTarget as HTMLElement).style.background = "#f5f5f5";
+                                (e.currentTarget as HTMLElement).style.color = "#1C1C1C";
                             }
                         }}
                         onMouseLeave={e => {
                             if (!active) {
                                 (e.currentTarget as HTMLElement).style.background = "transparent";
-                                (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)";
+                                (e.currentTarget as HTMLElement).style.color = "#666";
                             }
                         }}
                         >
@@ -141,27 +147,27 @@ function AdminSidebar() {
             </nav>
 
             {/* User card + logout */}
-            <div style={{ padding: "1rem", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ padding: "1rem", borderTop: "1px solid #f0f0f0" }}>
                 <div style={{
                     display: "flex", alignItems: "center", gap: 10,
                     padding: "10px 12px",
                     borderRadius: 10,
-                    background: "rgba(255,255,255,0.04)",
+                    background: "#fafafa",
                     marginBottom: 8,
                 }}>
                     <div style={{
                         width: 32, height: 32, borderRadius: "50%",
-                        background: "linear-gradient(135deg,#C9A96E,#e8c97a)",
+                        background: BRAND_RED,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: "0.7rem", fontWeight: 700, color: "#1a1a1a", flexShrink: 0,
+                        fontSize: "0.7rem", fontWeight: 700, color: "#fff", flexShrink: 0,
                     }}>
                         {user?.firstName?.[0]}{user?.lastName?.[0]}
                     </div>
                     <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "#1C1C1C", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {user?.firstName} {user?.lastName}
                         </p>
-                        <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <p style={{ fontSize: "0.65rem", color: "#aaa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {user?.email}
                         </p>
                     </div>
@@ -172,22 +178,22 @@ function AdminSidebar() {
                     padding: "10px 14px",
                     borderRadius: 10,
                     fontSize: "0.83rem", fontWeight: 500,
-                    color: "rgba(255,255,255,0.65)",
+                    color: "#666",
                     background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    border: "1px solid #ebebeb",
                     cursor: "pointer",
                     fontFamily: "'DM Sans', sans-serif",
                     transition: "background 0.18s, color 0.18s, border-color 0.18s",
                 }}
                 onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = "rgba(192,57,43,0.15)";
-                    (e.currentTarget as HTMLElement).style.color = "#ff8a7a";
-                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(192,57,43,0.3)";
+                    (e.currentTarget as HTMLElement).style.background = "#fff5f5";
+                    (e.currentTarget as HTMLElement).style.color = BRAND_RED;
+                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(218,11,0,0.25)";
                 }}
                 onMouseLeave={e => {
                     (e.currentTarget as HTMLElement).style.background = "transparent";
-                    (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)";
-                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.1)";
+                    (e.currentTarget as HTMLElement).style.color = "#666";
+                    (e.currentTarget as HTMLElement).style.borderColor = "#ebebeb";
                 }}
                 >
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -219,18 +225,18 @@ function AdminHeader() {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 2.5rem",
-            borderBottom: "1px solid #ebebeb",
+            borderBottom: "1px solid #f0f0f0",
             background: "#fff",
             flexShrink: 0,
         }}>
             <div>
                 <p style={{
                     fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em",
-                    textTransform: "uppercase", color: "#C9A96E", marginBottom: 3,
+                    textTransform: "uppercase", color: BRAND_RED, marginBottom: 3,
                 }}>
                     {segments.join(" / ")}
                 </p>
-                <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.55rem", fontWeight: 600, color: "#1a1a1a", lineHeight: 1 }}>
+                <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.45rem", fontWeight: 700, color: "#1C1C1C", lineHeight: 1 }}>
                     {title}
                 </h1>
             </div>
@@ -245,8 +251,8 @@ function AdminHeader() {
                 transition: "border-color 0.18s, color 0.18s",
             }}
             onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = "#C9A96E";
-                (e.currentTarget as HTMLElement).style.color = "#1a1a1a";
+                (e.currentTarget as HTMLElement).style.borderColor = BRAND_RED;
+                (e.currentTarget as HTMLElement).style.color = BRAND_RED;
             }}
             onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.borderColor = "#ebebeb";
@@ -271,7 +277,7 @@ function AdminFooter() {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 2.5rem",
-            borderTop: "1px solid #ebebeb",
+            borderTop: "1px solid #f0f0f0",
             background: "#fff",
             flexShrink: 0,
         }}>
