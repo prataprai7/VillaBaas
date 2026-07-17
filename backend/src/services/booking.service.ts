@@ -1,8 +1,11 @@
 import { BookingMongoRepository } from "../repositories/booking.repository";
 import { IBooking } from "../models/booking.model";
 import { HttpException } from "../exceptions/http-exception";
+import { sendBookingConfirmationEmail, sendBookingCancellationEmail } from "../services/email.service";
+import { UserMongoRepository } from "../repositories/user.repository";
 
 const bookingRepository = new BookingMongoRepository();
+const userRepository    = new UserMongoRepository();
 
 export class BookingService {
     async createBooking(userId: string, data: Partial<IBooking>): Promise<IBooking> {
@@ -37,7 +40,20 @@ export class BookingService {
             throw new HttpException(400, "Cannot pay a cancelled booking");
 
         const updated = await bookingRepository.updateStatus(bookingId, "paid", paymentMethod);
-        return updated!;
+        if (!updated) throw new HttpException(500, "Failed to update booking");
+
+        // Send confirmation email — non-blocking, won't fail the payment
+        try {
+            const user = await userRepository.getUserById(userId);
+            if (user?.email) {
+                const fullName = `${user.firstName} ${user.lastName}`;
+                await sendBookingConfirmationEmail(user.email, fullName, updated);
+            }
+        } catch (emailError) {
+            console.error("Failed to send confirmation email:", emailError);
+        }
+
+        return updated;
     }
 
     async cancelBooking(bookingId: string, userId: string): Promise<IBooking> {
@@ -49,6 +65,19 @@ export class BookingService {
             throw new HttpException(400, "Cannot cancel a paid booking");
 
         const updated = await bookingRepository.updateStatus(bookingId, "cancelled");
-        return updated!;
+        if (!updated) throw new HttpException(500, "Failed to cancel booking");
+
+        // Send cancellation email — non-blocking
+        try {
+            const user = await userRepository.getUserById(userId);
+            if (user?.email) {
+                const fullName = `${user.firstName} ${user.lastName}`;
+                await sendBookingCancellationEmail(user.email, fullName, updated);
+            }
+        } catch (emailError) {
+            console.error("Failed to send cancellation email:", emailError);
+        }
+
+        return updated;
     }
 }
