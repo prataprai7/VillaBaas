@@ -46,7 +46,7 @@ const VILLAS = [
   },
   {
     id: 3,
-    name: "Fewa Lake Retreat",
+    name: "Villa Karma Pokhara",
     location: "Pokhara, Nepal",
     address: "Lakeside, Pokhara, Gandaki",
     price: 14200,
@@ -57,7 +57,7 @@ const VILLAS = [
     baths: 2,
     tag: "new",
     type: "Lakeside",
-    img: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=85",
+    img: "https://a0.muscache.com/im/pictures/miso/Hosting-1135974458065631357/original/b39e7d07-95cf-40fb-828b-5ae4dd376397.jpeg?im_w=1440",
     amenities: ["WiFi", "Lake View", "Garden", "Parking"],
     breakfastIncluded: false,
     dinnerIncluded: false,
