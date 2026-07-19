@@ -213,7 +213,7 @@ const VILLAS = [
   },
   {
     id: 9,
-    name: "Lumbini Zen Villa",
+    name: "Leopard Villa at Tiger Palace by Soaltee",
     location: "Lumbini, Nepal",
     address: "Lumbini Peace Zone, Rupandehi",
     price: 7500,
@@ -224,8 +224,11 @@ const VILLAS = [
     baths: 2,
     tag: "immediate",
     type: "Jungle",
-    img: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200&q=85",
-    additionalImages: [],
+    img: "https://www.villasnepal.com/storage/330/conversions/01KHWRQJY78ARMKX5KVWWGX712-thumb_avif.webp",
+    additionalImages: [
+      "https://www.villasnepal.com/storage/330/conversions/01KHWRQJY78ARMKX5KVWWGX712-thumb_avif.webp",
+      "https://www.villasnepal.com/storage/318/conversions/01KHWRQJP4YWS06VN9FT87D80Z-orig_avif.webp"
+    ],
     amenities: ["WiFi", "Meditation Space", "Bicycles", "Garden"],
     breakfastIncluded: false,
     dinnerIncluded: false,
