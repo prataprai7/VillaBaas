@@ -39,7 +39,7 @@ const VILLAS = [
     baths: 2,
     tag: "immediate",
     type: "Lakeside",
-    img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=85",
+    img: "https://villathehideoutpokhara.np-hotel.com/data/Photos/OriginalPhoto/15839/1583906/1583906483/photo-the-hideout-villa-pokhara-pokhara-5.JPEG",
     amenities: ["WiFi", "Lake View", "Kitchen", "Air Conditioning"],
     breakfastIncluded: false,
     dinnerIncluded: false,
