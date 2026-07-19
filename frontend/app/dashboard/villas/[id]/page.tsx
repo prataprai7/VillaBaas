@@ -106,8 +106,12 @@ const VILLAS = [
     baths: 2,
     tag: "new",
     type: "Heritage",
-    img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=85",
-    additionalImages: [],
+    img: "https://media.vrbo.com/lodging/100000000/99800000/99794400/99794388/9ead10f2.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill",
+    additionalImages: [
+      "https://pix8.agoda.net/hotelImages/76067756/0/a35c11b4e6f8f4bfde926f4e2372fef9.jpg?ce=2&s=1024x",
+      "https://pix8.agoda.net/hotelImages/76067756/0/1993e397be874e3bf7bdea35eec367b9.jpg?ce=2&s=1024x",
+      "https://pix8.agoda.net/hotelImages/76067756/0/0937a0907bb3c81aaaa1034154e62f33.jpg?ce=2&s=1024x"
+    ],
     amenities: ["WiFi", "Kitchen", "Garden", "Parking"],
     breakfastIncluded: false,
     dinnerIncluded: false,
@@ -127,10 +131,10 @@ const VILLAS = [
     baths: 3,
     tag: "immediate",
     type: "Heritage",
-    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=85",
+    img: "https://www.villasnepal.com/storage/802/conversions/01KWTWP3A7QH4BZMQXAXNDW9Y8-hero_avif.webp",
     additionalImages: [
-      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&q=80",
-      "https://images.unsplash.com/photo-1599427303058-f04cbcf4756f?w=400&q=80",
+      "https://www.villasnepal.com/storage/799/conversions/01KWTWNQ8EYF6C2NBWBNP660VV-thumb_avif.webp",
+      "https://www.villasnepal.com/storage/798/conversions/01KWTWNJQK7Z9D785SXMQXMBTQ-thumb_avif.webp",
     ],
     amenities: ["Pool", "WiFi", "Kitchen", "Mountain View", "Garden", "BBQ"],
     breakfastIncluded: true,
@@ -151,7 +155,7 @@ const VILLAS = [
     baths: 3,
     tag: "popular",
     type: "Mountain",
-    img: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=1200&q=85",
+    img: "https://archidvilla.com/wp-content/uploads/2026/05/6.jpeg",
     additionalImages: [
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
       "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400&q=80",
