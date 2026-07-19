@@ -21,7 +21,7 @@ const VILLAS = [
     baths: 2,
     tag: "popular",
     type: "Lakeside",
-    img: "https://images.unsplash.com/photo-1599427303058-f04cbcf4756f?w=800&q=85",
+    img: "https://l.icdbcdn.com/oh/bae4bc48-3f95-4610-b83e-0e02eb91110e.jpg",
     amenities: ["Pool", "Mountain View", "WiFi", "Kitchen"],
     breakfastIncluded: true,
     dinnerIncluded: true,

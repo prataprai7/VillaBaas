@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 
-// ── Villa data (same as mobile app) ──────────────────────────────────────────
 const VILLAS = [
   {
     id: 1,
@@ -19,7 +18,7 @@ const VILLAS = [
     rooms: 4,
     baths: 2,
     tag: "popular",
-    img: "https://images.unsplash.com/photo-1599427303058-f04cbcf4756f?w=800&q=85",
+    img: "https://l.icdbcdn.com/oh/bae4bc48-3f95-4610-b83e-0e02eb91110e.jpg",
     amenities: ["Pool", "Mountain View", "WiFi", "Kitchen"],
     breakfastIncluded: true,
     dinnerIncluded: true,
@@ -35,14 +34,14 @@ const VILLAS = [
     rooms: 4,
     baths: 2,
     tag: "immediate",
-    img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=85",
+    img: "https://villathehideoutpokhara.np-hotel.com/data/Photos/OriginalPhoto/15839/1583906/1583906483/photo-the-hideout-villa-pokhara-pokhara-5.JPEG",
     amenities: ["WiFi", "Lake View", "Kitchen", "Air Conditioning"],
     breakfastIncluded: false,
     dinnerIncluded: false,
   },
   {
     id: 3,
-    name: "Fewa Lake Retreat",
+    name: "Villa Karma Pokhara",
     location: "Pokhara, Nepal",
     price: 14200,
     rating: 4.5,
@@ -51,7 +50,7 @@ const VILLAS = [
     rooms: 3,
     baths: 2,
     tag: "new",
-    img: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=85",
+    img: "https://a0.muscache.com/im/pictures/miso/Hosting-1135974458065631357/original/b39e7d07-95cf-40fb-828b-5ae4dd376397.jpeg?im_w=1440",
     amenities: ["WiFi", "Lake View", "Garden", "Parking"],
     breakfastIncluded: false,
     dinnerIncluded: false,
@@ -67,7 +66,7 @@ const VILLAS = [
     rooms: 3,
     baths: 2,
     tag: "new",
-    img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=85",
+    img: "https://media.vrbo.com/lodging/100000000/99800000/99794400/99794388/9ead10f2.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill",
     amenities: ["WiFi", "Kitchen", "Garden", "Parking"],
     breakfastIncluded: false,
     dinnerIncluded: false,
@@ -83,7 +82,7 @@ const VILLAS = [
     rooms: 4,
     baths: 3,
     tag: "immediate",
-    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=85",
+    img: "https://www.villasnepal.com/storage/802/conversions/01KWTWP3A7QH4BZMQXAXNDW9Y8-hero_avif.webp",
     amenities: ["Pool", "WiFi", "Kitchen", "Mountain View"],
     breakfastIncluded: true,
     dinnerIncluded: false,
@@ -99,15 +98,15 @@ const VILLAS = [
     rooms: 5,
     baths: 3,
     tag: "popular",
-    img: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=85",
+    img: "https://archidvilla.com/wp-content/uploads/2026/05/6.jpeg",
     amenities: ["WiFi", "Pool", "Kitchen", "Mountain View", "Heating"],
     breakfastIncluded: true,
     dinnerIncluded: true,
   },
   {
     id: 7,
-    name: "Mustang Stone House",
-    location: "Mustang, Nepal",
+    name: "Farmhouse In Dhulikhel",
+    location: "Kathmandu, Nepal",
     price: 9500,
     rating: 4.9,
     reviews: 34,
@@ -115,15 +114,15 @@ const VILLAS = [
     rooms: 3,
     baths: 2,
     tag: "popular",
-    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=85",
+    img: "https://www.villasnepal.com/storage/213/conversions/01KCR3VQMHGZC8RC5HFJW17D36-hero_avif.webp",
     amenities: ["WiFi", "Fireplace", "Heater", "Kitchen"],
     breakfastIncluded: false,
     dinnerIncluded: false,
   },
   {
     id: 8,
-    name: "Chitwan Safari Lodge",
-    location: "Chitwan, Nepal",
+    name: "Bella Vista Thecho",
+    location: "Kathmandu, Nepal",
     price: 11500,
     rating: 4.6,
     reviews: 72,
@@ -131,14 +130,14 @@ const VILLAS = [
     rooms: 4,
     baths: 4,
     tag: "popular",
-    img: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?w=800&q=85",
+    img: "https://www.villasnepal.com/storage/890/conversions/01KXSRPJ7HWBMGA4YRMQGMQF7D-hero_avif.webp",
     amenities: ["WiFi", "Air Conditioning", "Garden", "Restaurant"],
     breakfastIncluded: true,
     dinnerIncluded: true,
   },
   {
     id: 9,
-    name: "Lumbini Zen Villa",
+    name: "Leopard Villa at Tiger Palace by Soaltee",
     location: "Lumbini, Nepal",
     price: 7500,
     rating: 4.7,
@@ -147,15 +146,15 @@ const VILLAS = [
     rooms: 2,
     baths: 2,
     tag: "immediate",
-    img: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800&q=85",
+    img: "https://www.villasnepal.com/storage/330/conversions/01KHWRQJY78ARMKX5KVWWGX712-thumb_avif.webp",
     amenities: ["WiFi", "Meditation Space", "Bicycles"],
     breakfastIncluded: false,
     dinnerIncluded: false,
   },
   {
     id: 10,
-    name: "Ilam Tea Garden Villa",
-    location: "Ilam, Nepal",
+    name: "Farmhouse In Nagarkot",
+    location: "Nagarkot, Nepal",
     price: 8900,
     rating: 4.4,
     reviews: 47,
@@ -163,7 +162,7 @@ const VILLAS = [
     rooms: 3,
     baths: 2,
     tag: "new",
-    img: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=85",
+    img: "https://www.villasnepal.com/storage/364/conversions/01KK6B9NDV1YBWNYNE92DGEPNS-hero_avif.webp",
     amenities: ["WiFi", "Garden Terrace", "Tea Tasting", "Kitchen"],
     breakfastIncluded: false,
     dinnerIncluded: false,
@@ -185,7 +184,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  const [selectedPlace, setSelectedPlace]     = useState("Pokhara");
+  const [selectedPlace, setSelectedPlace]     = useState("All");
   const [selectedCategory, setSelectedCategory] = useState(1); // Popular
   const [searchQuery, setSearchQuery]         = useState("");
   const [guestCount, setGuestCount]           = useState(1);
@@ -213,7 +212,6 @@ export default function DashboardPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // ── Filter logic matching mobile ──────────────────────────────────────────
   const tagMap: Record<number, string> = { 0: "new", 1: "popular", 2: "immediate" };
   const filteredVillas = VILLAS.filter(v => {
     const matchCategory = v.tag === tagMap[selectedCategory];
