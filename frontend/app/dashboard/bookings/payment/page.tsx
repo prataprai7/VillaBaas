@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
-
 type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
 
 const BRAND_RED = "#DA0B00";
