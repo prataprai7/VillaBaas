@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-// ── eSewa test credentials ──────────────────────────────────────────────
 const ESEWA_PRODUCT_CODE = "EPAYTEST";
 const ESEWA_TEST_ID = "9806800001";
 const ESEWA_TEST_PIN = "1122";

@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
+
 type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
 
 const BRAND_RED = "#DA0B00";
@@ -11,7 +14,14 @@ const KHALTI_PURPLE = "#5C2D91";
 const CARD_BLUE = "#1565C0";
 const CASH_ORANGE = "#C2650A";
 
-export interface BookingSummary {
+interface VillaData {
+  id: number;
+  name: string;
+  location: string;
+  img: string;
+}
+
+interface BookingSummary {
   villaName: string;
   location: string;
   image: string;
@@ -19,24 +29,88 @@ export interface BookingSummary {
   guests: number;
 }
 
-interface PaymentScreenProps {
-  booking: BookingSummary;
-  totalPrice: string; // pre-formatted, e.g. "NPR 45,000"
-  onConfirm: () => Promise<void> | void; // called once payment "succeeds"
+function nightsBetween(checkIn: string, checkOut: string): number {
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  const diff = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return diff > 0 ? diff : 1;
 }
 
-export default function PaymentScreen({ booking, totalPrice, onConfirm }: PaymentScreenProps) {
+export default function PaymentPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const villaId = searchParams.get("villaId");
+  const checkIn = searchParams.get("checkIn") ?? "";
+  const checkOut = searchParams.get("checkOut") ?? "";
+  const guests = Number(searchParams.get("guests") ?? "1");
+  const total = Number(searchParams.get("total") ?? "0");
+
+  const [villa, setVilla] = useState<VillaData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [selected, setSelected] = useState<PaymentMethod>("esewa");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showEsewaScreen, setShowEsewaScreen] = useState(false);
+
+  useEffect(() => {
+    if (!villaId) {
+      setLoadError("Missing villa in booking details");
+      setLoading(false);
+      return;
+    }
+
+    async function fetchVilla() {
+      try {
+        const res = await fetch(`${API_URL}/villas/${villaId}`);
+        if (!res.ok) throw new Error("Villa not found");
+        const data = await res.json();
+        setVilla(data);
+      } catch (err) {
+        setLoadError(err instanceof Error ? err.message : "Failed to load villa");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchVilla();
+  }, [villaId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-sm text-gray-500">Loading booking details...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !villa) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <p className="text-sm text-red-600">{loadError || "Could not load villa"}</p>
+        <button onClick={() => router.back()} className="text-sm underline text-gray-500">
+          Go back
+        </button>
+      </div>
+    );
+  }
+
+  const booking: BookingSummary = {
+    villaName: villa.name,
+    location: villa.location,
+    image: villa.img,
+    nights: nightsBetween(checkIn, checkOut),
+    guests,
+  };
+
+  const totalPrice = `NPR ${total.toLocaleString()}`;
 
   async function handlePay() {
     if (selected === "esewa") {
       setShowEsewaScreen(true);
       return;
     }
-
     setIsProcessing(true);
     await new Promise((r) => setTimeout(r, 2000));
     setIsProcessing(false);
@@ -44,8 +118,9 @@ export default function PaymentScreen({ booking, totalPrice, onConfirm }: Paymen
   }
 
   async function handleSuccess() {
-    await onConfirm();
-    router.push("/booking/success");
+    // TODO: call your backend to mark the booking as paid, e.g.
+    // await fetch(`${API_URL}/bookings/${bookingId}`, { method: "PATCH", body: JSON.stringify({ paymentStatus: "completed" }) });
+    router.push("/dashboard/bookings/success");
   }
 
   if (showEsewaScreen) {
@@ -61,7 +136,6 @@ export default function PaymentScreen({ booking, totalPrice, onConfirm }: Paymen
 
   return (
     <div className="min-h-screen bg-[#F7F7F5] font-['DM_Sans',sans-serif]">
-      {/* ── Top bar ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 pt-4">
         <button onClick={() => router.back()} aria-label="Back" className="text-[#1A1A1A]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -72,7 +146,6 @@ export default function PaymentScreen({ booking, totalPrice, onConfirm }: Paymen
       </div>
 
       <div className="max-w-xl mx-auto px-4 pb-32 pt-6">
-        {/* ── Order summary ───────────────────────────────────────── */}
         <div className="bg-white rounded-2xl p-4 shadow-sm flex gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -131,7 +204,6 @@ export default function PaymentScreen({ booking, totalPrice, onConfirm }: Paymen
           />
         </div>
 
-        {/* ── Total reminder ───────────────────────────────────────── */}
         <div
           className="mt-6 rounded-2xl p-4 flex items-center justify-between border"
           style={{ backgroundColor: `${BRAND_RED}0F`, borderColor: `${BRAND_RED}33` }}
@@ -143,7 +215,6 @@ export default function PaymentScreen({ booking, totalPrice, onConfirm }: Paymen
         </div>
       </div>
 
-      {/* ── Pay button ─────────────────────────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 bg-white px-4 pt-3 pb-6 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
         <div className="max-w-xl mx-auto">
           <button
