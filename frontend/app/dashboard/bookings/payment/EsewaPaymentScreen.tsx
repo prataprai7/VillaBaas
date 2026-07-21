@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 const ESEWA_PRODUCT_CODE = "EPAYTEST";
 const ESEWA_TEST_ID = "9806800001";
@@ -39,8 +39,6 @@ export default function EsewaPaymentScreen({
       setError("Please enter your eSewa ID and PIN");
       return;
     }
-
-    // Sandbox validation
     if (id !== ESEWA_TEST_ID) {
       setError(`eSewa ID not found. Use test ID: ${ESEWA_TEST_ID}`);
       return;
@@ -54,7 +52,6 @@ export default function EsewaPaymentScreen({
     setIsProcessing(true);
     setStep("processing");
 
-    // Simulate processing
     await new Promise((r) => setTimeout(r, 800));
     setStep("success");
     await new Promise((r) => setTimeout(r, 1000));
@@ -64,35 +61,46 @@ export default function EsewaPaymentScreen({
     onSuccess();
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "10px 14px 10px 40px",
+    borderRadius: 10,
+    border: "1.5px solid #d1d5db",
+    background: "#fafafa",
+    fontSize: "0.9rem",
+    fontFamily: "'DM Sans', sans-serif",
+    outline: "none",
+  };
+
   return (
-    <div className="min-h-screen bg-white flex flex-col font-['DM_Sans',sans-serif]">
+    <div style={{ minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif" }}>
       {/* ── eSewa Header ─────────────────────────────────────────── */}
-      <div className="w-full px-4 pt-6 pb-5" style={{ backgroundColor: ESEWA_GREEN }}>
-        <div className="flex items-center">
-          <button onClick={onBack} aria-label="Back" className="text-white">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div style={{ width: "100%", padding: "1.5rem 1rem 1.25rem", background: ESEWA_GREEN }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
               <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <div className="flex-1 flex items-center justify-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center">
-              <span style={{ color: ESEWA_GREEN }} className="text-xl font-black">e</span>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: ESEWA_GREEN, fontSize: "1.35rem", fontWeight: 900 }}>e</span>
             </div>
-            <span className="text-white text-xl font-bold tracking-wide">eSewa</span>
+            <span style={{ color: "#fff", fontSize: "1.35rem", fontWeight: 700, letterSpacing: "0.02em" }}>eSewa</span>
           </div>
-          <div className="w-[22px]" />
+          <div style={{ width: 22 }} />
         </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-white/80 text-[13px]">Total Amount</p>
-          <p className="text-white text-3xl font-extrabold mt-1">{totalPrice}</p>
-          <p className="text-white/75 text-xs mt-1">{villaName}</p>
+        <div style={{ marginTop: 16, textAlign: "center" }}>
+          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.8rem" }}>Total Amount</p>
+          <p style={{ color: "#fff", fontSize: "1.9rem", fontWeight: 800, marginTop: 4 }}>{totalPrice}</p>
+          <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.75rem", marginTop: 4 }}>{villaName}</p>
         </div>
       </div>
 
       {/* ── Sandbox badge ────────────────────────────────────────── */}
-      <div className="w-full py-1.5 bg-orange-100 text-center">
-        <span className="text-orange-800 text-[11px] font-semibold tracking-wide">
+      <div style={{ width: "100%", padding: "6px 0", background: "#FEF3C7", textAlign: "center" }}>
+        <span style={{ color: "#92400E", fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.02em" }}>
           SANDBOX MODE — Use test credentials below
         </span>
       </div>
@@ -100,16 +108,11 @@ export default function EsewaPaymentScreen({
       {step === "processing" ? (
         <ProcessingView />
       ) : (
-        <div className="flex-1 overflow-y-auto p-6">
+        <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem" }}>
           {/* ── Test credentials hint ─────────────────────────────── */}
-          <div
-            className="rounded-[10px] p-3.5 border"
-            style={{ backgroundColor: `${ESEWA_GREEN}14`, borderColor: `${ESEWA_GREEN}4D` }}
-          >
-            <p className="text-xs font-bold" style={{ color: ESEWA_DARK }}>
-              Test Credentials
-            </p>
-            <div className="mt-1.5 space-y-0.5">
+          <div style={{ borderRadius: 10, padding: "0.85rem", background: `${ESEWA_GREEN}14`, border: `1px solid ${ESEWA_GREEN}4D` }}>
+            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: ESEWA_DARK }}>Test Credentials</p>
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3 }}>
               <CredentialRow label="eSewa ID" value={ESEWA_TEST_ID} />
               <CredentialRow label="PIN" value={ESEWA_TEST_PIN} />
               <CredentialRow label="Product Code" value={ESEWA_PRODUCT_CODE} />
@@ -117,11 +120,11 @@ export default function EsewaPaymentScreen({
           </div>
 
           {/* ── eSewa ID field ─────────────────────────────────────── */}
-          <label className="block mt-6 text-[13px] font-semibold text-[#333]">
+          <label style={{ display: "block", marginTop: 24, fontSize: "0.8rem", fontWeight: 600, color: "#333" }}>
             eSewa ID / Mobile Number
           </label>
-          <div className="relative mt-2">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: ESEWA_GREEN }}>
+          <div style={{ position: "relative", marginTop: 8 }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: ESEWA_GREEN, display: "flex" }}>
               <PhoneIcon />
             </span>
             <input
@@ -129,15 +132,14 @@ export default function EsewaPaymentScreen({
               onChange={(e) => setEsewaId(e.target.value.replace(/\D/g, "").slice(0, 10))}
               inputMode="numeric"
               placeholder="Enter your eSewa ID"
-              className="w-full pl-10 pr-3 py-2.5 rounded-[10px] bg-gray-50 border border-gray-300 text-sm outline-none focus:ring-2"
-              style={{ ["--tw-ring-color" as string]: ESEWA_GREEN }}
+              style={inputStyle}
             />
           </div>
 
           {/* ── PIN field ──────────────────────────────────────────── */}
-          <label className="block mt-4 text-[13px] font-semibold text-[#333]">eSewa PIN</label>
-          <div className="relative mt-2">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: ESEWA_GREEN }}>
+          <label style={{ display: "block", marginTop: 16, fontSize: "0.8rem", fontWeight: 600, color: "#333" }}>eSewa PIN</label>
+          <div style={{ position: "relative", marginTop: 8 }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: ESEWA_GREEN, display: "flex" }}>
               <LockIcon />
             </span>
             <input
@@ -146,72 +148,90 @@ export default function EsewaPaymentScreen({
               type={obscurePin ? "password" : "text"}
               inputMode="numeric"
               placeholder="Enter your PIN"
-              className="w-full pl-10 pr-10 py-2.5 rounded-[10px] bg-gray-50 border border-gray-300 text-sm outline-none focus:ring-2"
-              style={{ ["--tw-ring-color" as string]: ESEWA_GREEN }}
+              style={{ ...inputStyle, paddingRight: 40 }}
             />
             <button
               type="button"
               onClick={() => setObscurePin(!obscurePin)}
-              aria-label={obscurePin ? "Show PIN" : "Hide PIN"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+              style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex" }}
             >
               {obscurePin ? <EyeIcon /> : <EyeOffIcon />}
             </button>
           </div>
 
           {error && (
-            <div className="mt-2.5 flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200">
-              <span className="text-red-600 mt-0.5">
+            <div style={{ marginTop: 10, display: "flex", alignItems: "flex-start", gap: 8, padding: "10px", borderRadius: 8, background: "#FEF2F2", border: "1px solid #FECACA" }}>
+              <span style={{ color: "#DC2626", marginTop: 2, display: "flex" }}>
                 <ErrorIcon />
               </span>
-              <p className="text-xs text-red-700">{error}</p>
+              <p style={{ fontSize: "0.75rem", color: "#B91C1C" }}>{error}</p>
             </div>
           )}
 
           <button
             onClick={handlePay}
             disabled={isProcessing}
-            className="w-full h-[52px] mt-7 rounded-xl text-white text-base font-bold disabled:cursor-not-allowed disabled:opacity-70"
-            style={{ backgroundColor: ESEWA_GREEN }}
+            style={{
+              width: "100%",
+              height: 52,
+              marginTop: 28,
+              borderRadius: 12,
+              color: "#fff",
+              fontSize: "1rem",
+              fontWeight: 700,
+              border: "none",
+              cursor: isProcessing ? "not-allowed" : "pointer",
+              opacity: isProcessing ? 0.7 : 1,
+              background: ESEWA_GREEN,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
           >
             {isProcessing ? "Processing..." : `Pay ${totalPrice}`}
           </button>
 
-          <div className="mt-4 flex items-center justify-center gap-1.5 text-gray-500">
+          <div style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: "#9ca3af" }}>
             <LockIcon small />
-            <span className="text-[11px]">Secured by eSewa Payment Gateway</span>
+            <span style={{ fontSize: "0.7rem" }}>Secured by eSewa Payment Gateway</span>
           </div>
         </div>
       )}
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+      `}</style>
     </div>
   );
 }
 
 function ProcessingView() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center">
-      <div
-        className="w-20 h-20 rounded-full flex items-center justify-center"
-        style={{ backgroundColor: `${ESEWA_GREEN}1A` }}
-      >
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 80, height: 80, borderRadius: "50%", background: `${ESEWA_GREEN}1A`, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div
-          className="w-8 h-8 rounded-full border-[3px] border-t-transparent animate-spin"
-          style={{ borderColor: ESEWA_GREEN, borderTopColor: "transparent" }}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            border: `3px solid ${ESEWA_GREEN}`,
+            borderTopColor: "transparent",
+            animation: "esewa-spin 0.8s linear infinite",
+          }}
         />
       </div>
-      <p className="mt-6 text-base font-semibold text-[#333]">Processing Payment...</p>
-      <p className="mt-2 text-[13px] text-gray-500">Please do not close this window</p>
+      <p style={{ marginTop: 24, fontSize: "1rem", fontWeight: 600, color: "#333" }}>Processing Payment...</p>
+      <p style={{ marginTop: 8, fontSize: "0.8rem", color: "#9ca3af" }}>Please do not close this window</p>
+      <style>{`
+        @keyframes esewa-spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
 
 function CredentialRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex text-xs">
-      <span className="text-[#555]">{label}: </span>
-      <span className="font-bold font-mono ml-1" style={{ color: ESEWA_DARK }}>
-        {value}
-      </span>
+    <div style={{ display: "flex", fontSize: "0.75rem" }}>
+      <span style={{ color: "#555" }}>{label}: </span>
+      <span style={{ fontWeight: 700, fontFamily: "monospace", marginLeft: 4, color: ESEWA_DARK }}>{value}</span>
     </div>
   );
 }

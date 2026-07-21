@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
 import { getVillaById } from "@/lib/data/villas";
@@ -12,14 +12,6 @@ const ESEWA_GREEN = "#60BB46";
 const KHALTI_PURPLE = "#5C2D91";
 const CARD_BLUE = "#1565C0";
 const CASH_ORANGE = "#C2650A";
-
-interface BookingSummary {
-  villaName: string;
-  location: string;
-  image: string;
-  nights: number;
-  guests: number;
-}
 
 function nightsBetween(checkIn: string, checkOut: string): number {
   const start = new Date(checkIn);
@@ -46,23 +38,16 @@ export default function PaymentPage() {
 
   if (!villa) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-        <p className="text-sm text-red-600">Villa not found</p>
-        <button onClick={() => router.back()} className="text-sm underline text-gray-500">
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "1.1rem", color: "#aaa", marginBottom: "1rem" }}>Villa not found</p>
+        <button onClick={() => router.back()} style={{ padding: "10px 24px", background: BRAND_RED, color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
           Go back
         </button>
       </div>
     );
   }
 
-  const booking: BookingSummary = {
-    villaName: villa.name,
-    location: villa.location,
-    image: villa.img,
-    nights: nightsBetween(checkIn, checkOut),
-    guests,
-  };
-
+  const nights = nightsBetween(checkIn, checkOut);
   const totalPrice = `NPR ${total.toLocaleString()}`;
 
   async function handlePay() {
@@ -77,8 +62,7 @@ export default function PaymentPage() {
   }
 
   async function handleSuccess() {
-    // TODO: call your backend to mark the booking as paid, e.g.
-    // await fetch(`${API_URL}/bookings/${bookingId}`, { method: "PATCH", body: JSON.stringify({ paymentStatus: "completed" }) });
+    // TODO: call your backend to mark the booking as paid
     router.push("/dashboard/bookings/success");
   }
 
@@ -86,47 +70,55 @@ export default function PaymentPage() {
     return (
       <EsewaPaymentScreen
         totalPrice={totalPrice}
-        villaName={booking.villaName}
+        villaName={villa.name}
         onBack={() => setShowEsewaScreen(false)}
         onSuccess={handleSuccess}
       />
     );
   }
 
+  const card: React.CSSProperties = {
+    background: "#fff",
+    borderRadius: 16,
+    padding: "1.25rem",
+    border: "1px solid #f0f0f0",
+  };
+
   return (
-    <div className="min-h-screen bg-[#F7F7F5] font-['DM_Sans',sans-serif]">
-      <div className="flex items-center gap-3 px-4 pt-4">
-        <button onClick={() => router.back()} aria-label="Back" className="text-[#1A1A1A]">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+    <div style={{ minHeight: "100vh", background: "#EEEEEE", fontFamily: "'DM Sans', sans-serif", color: "#1C1C1C" }}>
+      {/* ── Top bar ─────────────────────────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "1rem 4vw", background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
+        <button onClick={() => router.back()} style={{ background: "none", border: "none", cursor: "pointer", display: "flex" }}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1C1C1C" strokeWidth="2.2">
             <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <h1 className="font-['Playfair_Display',serif] text-2xl font-semibold text-[#1A1A1A]">Payment</h1>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.5rem", fontWeight: 700, color: "#1C1C1C" }}>Payment</h1>
       </div>
 
-      <div className="max-w-xl mx-auto px-4 pb-32 pt-6">
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "2rem 4vw 8rem" }}>
+        {/* ── Order summary ───────────────────────────────────── */}
+        <div style={{ ...card, display: "flex", gap: 14 }}>
           <img
-            src={booking.image}
-            alt={booking.villaName}
-            className="w-[72px] h-[72px] rounded-[10px] object-cover bg-gray-200"
+            src={villa.img}
+            alt={villa.name}
+            style={{ width: 76, height: 76, borderRadius: 12, objectFit: "cover", background: "#eee", flexShrink: 0 }}
           />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[#1A1A1A] truncate">{booking.villaName}</p>
-            <p className="text-xs text-gray-500 mt-0.5 truncate">{booking.location}</p>
-            <p className="text-[11px] text-gray-500 mt-1.5">
-              {booking.nights} nights · {booking.guests} guests
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: "0.95rem", fontWeight: 600, color: "#1C1C1C" }}>{villa.name}</p>
+            <p style={{ fontSize: "0.8rem", color: "#888", marginTop: 2 }}>{villa.location}</p>
+            <p style={{ fontSize: "0.75rem", color: "#aaa", marginTop: 6 }}>
+              {nights} nights · {guests} guests
             </p>
-            <p className="text-sm font-bold mt-1" style={{ color: BRAND_RED }}>
-              {totalPrice}
-            </p>
+            <p style={{ fontSize: "0.95rem", fontWeight: 700, color: BRAND_RED, marginTop: 4 }}>{totalPrice}</p>
           </div>
         </div>
 
-        <h2 className="mt-6 mb-2.5 text-lg font-semibold text-[#1A1A1A]">Payment Method</h2>
+        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.2rem", fontWeight: 700, color: "#1C1C1C", margin: "1.5rem 0 0.75rem" }}>
+          Payment Method
+        </p>
 
-        <div className="space-y-2.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <PaymentTile
             selected={selected === "esewa"}
             onClick={() => setSelected("esewa")}
@@ -163,26 +155,31 @@ export default function PaymentPage() {
           />
         </div>
 
-        <div
-          className="mt-6 rounded-2xl p-4 flex items-center justify-between border"
-          style={{ backgroundColor: `${BRAND_RED}0F`, borderColor: `${BRAND_RED}33` }}
-        >
-          <span className="text-sm text-[#1A1A1A]">Total Amount</span>
-          <span className="text-lg font-bold" style={{ color: BRAND_RED }}>
-            {totalPrice}
-          </span>
+        {/* ── Total reminder ───────────────────────────────────── */}
+        <div style={{ marginTop: 24, borderRadius: 16, padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFF5F5", border: `1px solid rgba(218,11,0,0.2)` }}>
+          <span style={{ fontSize: "0.9rem", color: "#1C1C1C" }}>Total Amount</span>
+          <span style={{ fontSize: "1.1rem", fontWeight: 700, color: BRAND_RED }}>{totalPrice}</span>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white px-4 pt-3 pb-6 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
-        <div className="max-w-xl mx-auto">
+      {/* ── Pay button (fixed bottom) ───────────────────────────── */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", padding: "0.75rem 4vw 1.5rem", boxShadow: "0 -4px 16px rgba(0,0,0,0.08)" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
           <button
             onClick={handlePay}
             disabled={isProcessing}
-            className="w-full h-[52px] rounded-2xl text-white text-base font-bold disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
             style={{
-              backgroundColor:
-                selected === "esewa" ? ESEWA_GREEN : selected === "khalti" ? KHALTI_PURPLE : BRAND_RED,
+              width: "100%",
+              height: 52,
+              borderRadius: 14,
+              color: "#fff",
+              fontSize: "0.95rem",
+              fontWeight: 700,
+              border: "none",
+              cursor: isProcessing ? "not-allowed" : "pointer",
+              opacity: isProcessing ? 0.7 : 1,
+              fontFamily: "'DM Sans', sans-serif",
+              background: selected === "esewa" ? ESEWA_GREEN : selected === "khalti" ? KHALTI_PURPLE : BRAND_RED,
             }}
           >
             {isProcessing
@@ -195,6 +192,10 @@ export default function PaymentPage() {
           </button>
         </div>
       </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+      `}</style>
     </div>
   );
 }
@@ -219,37 +220,46 @@ function PaymentTile({
   return (
     <button
       onClick={onClick}
-      className="w-full bg-white rounded-[14px] p-4 flex items-center gap-3.5 text-left transition-all"
       style={{
-        border: `${selected ? 2 : 1}px solid ${selected ? color : "#E5E7EB"}`,
-        boxShadow: selected ? `0 2px 8px ${color}1F` : "none",
+        width: "100%",
+        background: "#fff",
+        borderRadius: 14,
+        padding: "1rem",
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        textAlign: "left",
+        cursor: "pointer",
+        border: `${selected ? 2 : 1}px solid ${selected ? color : "#e5e5e5"}`,
+        boxShadow: selected ? `0 2px 10px ${color}22` : "none",
+        fontFamily: "'DM Sans', sans-serif",
       }}
     >
-      <div
-        className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0"
-        style={{ backgroundColor: `${color}1A` }}
-      >
-        <span className="text-xl">{emoji}</span>
+      <div style={{ width: 44, height: 44, borderRadius: 10, background: `${color}1A`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <span style={{ fontSize: "1.3rem" }}>{emoji}</span>
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-[#1A1A1A]">{label}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: "0.9rem", color: "#1C1C1C" }}>{label}</span>
           {badge && (
-            <span
-              className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: `${color}1F`, color }}
-            >
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.03em", padding: "2px 7px", borderRadius: 5, background: `${color}1F`, color }}>
               {badge}
             </span>
           )}
         </div>
-        <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p>
+        <p style={{ fontSize: "0.78rem", color: "#888", marginTop: 3 }}>{subtitle}</p>
       </div>
       <div
-        className="w-[22px] h-[22px] rounded-full shrink-0 flex items-center justify-center transition-colors"
         style={{
-          backgroundColor: selected ? color : "transparent",
-          border: `2px solid ${selected ? color : "#D1D5DB"}`,
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: selected ? color : "transparent",
+          border: `2px solid ${selected ? color : "#d1d5db"}`,
         }}
       >
         {selected && (
@@ -263,43 +273,37 @@ function PaymentTile({
 }
 
 function CardForm() {
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    marginTop: 6,
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1.5px solid #e5e5e5",
+    fontSize: "0.85rem",
+    fontFamily: "'DM Sans', sans-serif",
+    outline: "none",
+  };
+  const labelStyle: React.CSSProperties = { fontSize: "0.75rem", color: "#888" };
+
   return (
-    <div className="bg-white rounded-[14px] p-4 border border-gray-200 space-y-3">
+    <div style={{ background: "#fff", borderRadius: 14, padding: "1rem", border: "1px solid #e5e5e5", display: "flex", flexDirection: "column", gap: 12 }}>
       <div>
-        <label className="text-xs text-gray-500">Card Number</label>
-        <input
-          inputMode="numeric"
-          placeholder="1234 5678 9012 3456"
-          className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2"
-          style={{ ["--tw-ring-color" as string]: BRAND_RED }}
-        />
+        <label style={labelStyle}>Card Number</label>
+        <input placeholder="1234 5678 9012 3456" style={inputStyle} />
       </div>
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <label className="text-xs text-gray-500">Expiry</label>
-          <input
-            placeholder="MM/YY"
-            className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2"
-            style={{ ["--tw-ring-color" as string]: BRAND_RED }}
-          />
+      <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <label style={labelStyle}>Expiry</label>
+          <input placeholder="MM/YY" style={inputStyle} />
         </div>
-        <div className="flex-1">
-          <label className="text-xs text-gray-500">CVV</label>
-          <input
-            type="password"
-            placeholder="123"
-            className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2"
-            style={{ ["--tw-ring-color" as string]: BRAND_RED }}
-          />
+        <div style={{ flex: 1 }}>
+          <label style={labelStyle}>CVV</label>
+          <input type="password" placeholder="123" style={inputStyle} />
         </div>
       </div>
       <div>
-        <label className="text-xs text-gray-500">Cardholder Name</label>
-        <input
-          placeholder="As on card"
-          className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2"
-          style={{ ["--tw-ring-color" as string]: BRAND_RED }}
-        />
+        <label style={labelStyle}>Cardholder Name</label>
+        <input placeholder="As on card" style={inputStyle} />
       </div>
     </div>
   );
