@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
 import { getVillaById } from "@/lib/data/villas";
+import { addBooking, genBookingId } from "@/lib/data/bookings-store";
 
 type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
 
@@ -47,6 +48,10 @@ export default function PaymentPage() {
     );
   }
 
+  // Captured here, after the guard, so closures below (handlePay, handleSuccess)
+  // don't hit TS's "possibly undefined" limitation on closured variables.
+  const currentVilla = villa;
+
   const nights = nightsBetween(checkIn, checkOut);
   const totalPrice = `NPR ${total.toLocaleString()}`;
 
@@ -62,15 +67,30 @@ export default function PaymentPage() {
   }
 
   async function handleSuccess() {
-    // TODO: call your backend to mark the booking as paid
-    router.push("/dashboard/bookings/success");
+    const bookingId = genBookingId();
+    addBooking({
+      id: bookingId,
+      villaId: currentVilla.id,
+      villaName: currentVilla.name,
+      location: currentVilla.location,
+      img: currentVilla.img,
+      checkIn,
+      checkOut,
+      guests,
+      nights,
+      totalPrice: total,
+      status: "upcoming",
+      paymentMethod: selected,
+      createdAt: new Date().toISOString(),
+    });
+    router.push(`/dashboard/bookings/success?bookingId=${bookingId}`);
   }
 
   if (showEsewaScreen) {
     return (
       <EsewaPaymentScreen
         totalPrice={totalPrice}
-        villaName={villa.name}
+        villaName={currentVilla.name}
         onBack={() => setShowEsewaScreen(false)}
         onSuccess={handleSuccess}
       />
@@ -100,13 +120,13 @@ export default function PaymentPage() {
         {/* ── Order summary ───────────────────────────────────── */}
         <div style={{ ...card, display: "flex", gap: 14 }}>
           <img
-            src={villa.img}
-            alt={villa.name}
+            src={currentVilla.img}
+            alt={currentVilla.name}
             style={{ width: 76, height: 76, borderRadius: 12, objectFit: "cover", background: "#eee", flexShrink: 0 }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: "0.95rem", fontWeight: 600, color: "#1C1C1C" }}>{villa.name}</p>
-            <p style={{ fontSize: "0.8rem", color: "#888", marginTop: 2 }}>{villa.location}</p>
+            <p style={{ fontSize: "0.95rem", fontWeight: 600, color: "#1C1C1C" }}>{currentVilla.name}</p>
+            <p style={{ fontSize: "0.8rem", color: "#888", marginTop: 2 }}>{currentVilla.location}</p>
             <p style={{ fontSize: "0.75rem", color: "#aaa", marginTop: 6 }}>
               {nights} nights · {guests} guests
             </p>
