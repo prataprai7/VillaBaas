@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
+import { getVillaById } from "@/lib/data/villas";
 
 type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
 
@@ -13,13 +12,6 @@ const ESEWA_GREEN = "#60BB46";
 const KHALTI_PURPLE = "#5C2D91";
 const CARD_BLUE = "#1565C0";
 const CASH_ORANGE = "#C2650A";
-
-interface VillaData {
-  id: number;
-  name: string;
-  location: string;
-  img: string;
-}
 
 interface BookingSummary {
   villaName: string;
@@ -46,49 +38,16 @@ export default function PaymentPage() {
   const guests = Number(searchParams.get("guests") ?? "1");
   const total = Number(searchParams.get("total") ?? "0");
 
-  const [villa, setVilla] = useState<VillaData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
   const [selected, setSelected] = useState<PaymentMethod>("esewa");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showEsewaScreen, setShowEsewaScreen] = useState(false);
 
-  useEffect(() => {
-    if (!villaId) {
-      setLoadError("Missing villa in booking details");
-      setLoading(false);
-      return;
-    }
+  const villa = villaId ? getVillaById(Number(villaId)) : undefined;
 
-    async function fetchVilla() {
-      try {
-        const res = await fetch(`${API_URL}/villas/${villaId}`);
-        if (!res.ok) throw new Error("Villa not found");
-        const data = await res.json();
-        setVilla(data);
-      } catch (err) {
-        setLoadError(err instanceof Error ? err.message : "Failed to load villa");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchVilla();
-  }, [villaId]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm text-gray-500">Loading booking details...</p>
-      </div>
-    );
-  }
-
-  if (loadError || !villa) {
+  if (!villa) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-        <p className="text-sm text-red-600">{loadError || "Could not load villa"}</p>
+        <p className="text-sm text-red-600">Villa not found</p>
         <button onClick={() => router.back()} className="text-sm underline text-gray-500">
           Go back
         </button>
