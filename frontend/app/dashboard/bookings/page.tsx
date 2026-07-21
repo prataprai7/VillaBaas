@@ -3,85 +3,18 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { getTokenCookie } from "@/lib/api/cookies";
+import { getBookings, updateBookingStatus, StoredBooking, BookingStatus } from "@/lib/data/bookings-store";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
 
-type BookingStatus = "upcoming" | "completed" | "cancelled";
-
-interface Booking {
-  id: string;
-  villaName: string;
-  location: string;
-  img: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  nights: number;
-  totalPrice: number;
-  status: BookingStatus;
-}
-
-// Mock bookings — replace with real API call when booking backend is ready
-const MOCK_BOOKINGS: Booking[] = [
-  {
-    id: "1",
-    villaName: "Methlang Villa",
-    location: "Lakeside, Pokhara",
-    img: "https://images.unsplash.com/photo-1599427303058-f04cbcf4756f?w=400&q=80",
-    checkIn: "2025-08-15",
-    checkOut: "2025-08-18",
-    guests: 4,
-    nights: 3,
-    totalPrice: 52800,
-    status: "upcoming",
-  },
-  {
-    id: "2",
-    villaName: "Archid Villa",
-    location: "Nagarkot Hill, Bhaktapur",
-    img: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=400&q=80",
-    checkIn: "2025-07-10",
-    checkOut: "2025-07-13",
-    guests: 6,
-    nights: 3,
-    totalPrice: 72000,
-    status: "upcoming",
-  },
-  {
-    id: "3",
-    villaName: "Chitwan Safari Lodge",
-    location: "Sauraha, Chitwan",
-    img: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?w=400&q=80",
-    checkIn: "2025-06-01",
-    checkOut: "2025-06-04",
-    guests: 2,
-    nights: 3,
-    totalPrice: 34500,
-    status: "completed",
-  },
-  {
-    id: "4",
-    villaName: "Fewa Lake Retreat",
-    location: "Lakeside, Pokhara",
-    img: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&q=80",
-    checkIn: "2025-05-20",
-    checkOut: "2025-05-22",
-    guests: 2,
-    nights: 2,
-    totalPrice: 28400,
-    status: "cancelled",
-  },
-];
-
 const TABS = ["Upcoming", "Completed", "Cancelled"];
 
 const NAV_LINKS = [
-  { label: "Home",     href: "/dashboard" },
-  { label: "Villas",   href: "/dashboard/villas" },
+  { label: "Home", href: "/dashboard" },
+  { label: "Villas", href: "/dashboard/villas" },
   { label: "Bookings", href: "/dashboard/bookings" },
-  { label: "About",    href: "#" },
+  { label: "About", href: "#" },
 ];
 
 function fmtDate(d: string) {
@@ -89,13 +22,13 @@ function fmtDate(d: string) {
 }
 
 function statusColor(s: BookingStatus) {
-  if (s === "upcoming")  return { bg: "#FFF5F5", border: "#FECACA", text: BRAND_RED };
+  if (s === "upcoming") return { bg: "#FFF5F5", border: "#FECACA", text: BRAND_RED };
   if (s === "completed") return { bg: "#F0FDF4", border: "#86EFAC", text: "#16A34A" };
   return { bg: "#F9FAFB", border: "#E5E7EB", text: "#6B7280" };
 }
 
 function statusLabel(s: BookingStatus) {
-  if (s === "upcoming")  return "Upcoming";
+  if (s === "upcoming") return "Upcoming";
   if (s === "completed") return "Completed ✓";
   return "Cancelled";
 }
@@ -104,15 +37,21 @@ export default function BookingsPage() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  const [activeTab,    setActiveTab]    = useState(0);
-  const [bookings,     setBookings]     = useState<Booking[]>(MOCK_BOOKINGS);
+  const [activeTab, setActiveTab] = useState(0);
+  const [bookings, setBookings] = useState<StoredBooking[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
-  const [toast,        setToast]        = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
-  const token = getTokenCookie();
+
+  // Load real bookings from local storage on mount (client-side only)
+  useEffect(() => {
+    setBookings(getBookings());
+    setLoaded(true);
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -128,35 +67,21 @@ export default function BookingsPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  // In real app: fetch bookings from API using token
-  // useEffect(() => {
-  //   if (!token) return;
-  //   fetch(`${API_URL}/api/v1/bookings`, {
-  //     headers: { Authorization: `Bearer ${token}` }
-  //   }).then(r => r.json()).then(d => setBookings(d.data));
-  // }, [token]);
-
-  const filtered = bookings.filter(b => {
+  const filtered = bookings.filter((b) => {
     if (activeTab === 0) return b.status === "upcoming";
     if (activeTab === 1) return b.status === "completed";
     return b.status === "cancelled";
   });
 
   function handleCancel(id: string) {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "cancelled" } : b));
+    updateBookingStatus(id, "cancelled");
+    setBookings(getBookings());
     setCancelTarget(null);
     setToast({ msg: "Booking cancelled successfully", type: "success" });
   }
 
-  const inp: React.CSSProperties = {
-    height: 42, border: "1.5px solid #E8E2D9", borderRadius: 8,
-    padding: "0 14px", fontSize: "0.85rem", color: "#1a1a1a",
-    background: "#FAFAFA", outline: "none", fontFamily: "'DM Sans', sans-serif",
-  };
-
   return (
     <div style={{ minHeight: "100vh", background: "#EEEEEE", fontFamily: "'DM Sans', sans-serif", color: "#1C1C1C", margin: 0, padding: 0 }}>
-
       {/* ── TOAST ── */}
       {toast && (
         <div style={{
@@ -183,15 +108,15 @@ export default function BookingsPage() {
         <a href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div style={{ width: 38, height: 38, borderRadius: "50%", background: BRAND_RED, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" strokeWidth="1.8">
-              <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
-              <path d="M9 22V12h6v10"/>
+              <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" />
+              <path d="M9 22V12h6v10" />
             </svg>
           </div>
           <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.25rem", fontWeight: 700, color: "#1C1C1C" }}>VillaBaas</span>
         </a>
 
         <div style={{ display: "flex", gap: "2rem" }}>
-          {NAV_LINKS.map(l => (
+          {NAV_LINKS.map((l) => (
             <a key={l.label} href={l.href} style={{
               fontSize: "0.88rem",
               color: l.href === "/dashboard/bookings" ? "#1C1C1C" : "#888",
@@ -200,8 +125,8 @@ export default function BookingsPage() {
               borderBottom: l.href === "/dashboard/bookings" ? `2px solid ${BRAND_RED}` : "2px solid transparent",
               paddingBottom: 2,
             }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#1C1C1C")}
-            onMouseLeave={e => { if (l.href !== "/dashboard/bookings") e.currentTarget.style.color = "#888"; }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#1C1C1C")}
+              onMouseLeave={(e) => { if (l.href !== "/dashboard/bookings") e.currentTarget.style.color = "#888"; }}
             >{l.label}</a>
           ))}
         </div>
@@ -212,7 +137,7 @@ export default function BookingsPage() {
           </span>
           {user && (
             <div ref={dropdownRef} style={{ position: "relative" }}>
-              <div onClick={() => setDropdownOpen(v => !v)} style={{
+              <div onClick={() => setDropdownOpen((v) => !v)} style={{
                 width: 38, height: 38, borderRadius: "50%",
                 background: avatarSrc ? "transparent" : BRAND_RED,
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -234,10 +159,10 @@ export default function BookingsPage() {
                     <p style={{ fontSize: "0.72rem", color: "#aaa" }}>{user.email}</p>
                   </div>
                   <a href="/dashboard/profile" style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", textDecoration: "none", fontSize: "0.84rem", color: "#1C1C1C" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#888" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#888" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                     My Profile
                   </a>
                   <button onClick={() => { setDropdownOpen(false); logout(); }} style={{
@@ -246,11 +171,11 @@ export default function BookingsPage() {
                     fontSize: "0.84rem", color: BRAND_RED, cursor: "pointer",
                     borderTop: "1px solid #f5f5f5", fontFamily: "'DM Sans', sans-serif", textAlign: "left",
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#fff5f5")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#fff5f5")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke={BRAND_RED} strokeWidth="1.8">
-                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
                     </svg>
                     Sign Out
                   </button>
@@ -266,10 +191,10 @@ export default function BookingsPage() {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
             <a href="/dashboard" style={{ color: "#aaa", textDecoration: "none", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: 4 }}
-              onMouseEnter={e => (e.currentTarget.style.color = BRAND_RED)}
-              onMouseLeave={e => (e.currentTarget.style.color = "#aaa")}
+              onMouseEnter={(e) => (e.currentTarget.style.color = BRAND_RED)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#aaa")}
             >
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
               Home
             </a>
             <span style={{ color: "#ccc", fontSize: "0.8rem" }}>/</span>
@@ -286,12 +211,8 @@ export default function BookingsPage() {
 
       {/* ── MAIN ── */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem 4vw" }}>
-
         {/* ── TABS ── */}
-        <div style={{
-          display: "flex", background: "#E5E5E5", borderRadius: 14,
-          padding: 4, marginBottom: "2rem",
-        }}>
+        <div style={{ display: "flex", background: "#E5E5E5", borderRadius: 14, padding: 4, marginBottom: "2rem" }}>
           {TABS.map((tab, i) => (
             <button key={tab} onClick={() => setActiveTab(i)} style={{
               flex: 1, height: 42, border: "none", borderRadius: 10,
@@ -309,7 +230,7 @@ export default function BookingsPage() {
                 color: activeTab === i ? "#fff" : "#888",
                 padding: "2px 7px", borderRadius: 10,
               }}>
-                {bookings.filter(b =>
+                {bookings.filter((b) =>
                   i === 0 ? b.status === "upcoming" :
                   i === 1 ? b.status === "completed" :
                   b.status === "cancelled"
@@ -320,23 +241,20 @@ export default function BookingsPage() {
         </div>
 
         {/* ── BOOKING LIST ── */}
-        {filtered.length === 0 ? (
-          <div style={{
-            textAlign: "center", padding: "5rem 2rem",
-            background: "#fff", borderRadius: 20, border: "1px solid #ebebeb",
-          }}>
+        {!loaded ? null : filtered.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "5rem 2rem", background: "#fff", borderRadius: 20, border: "1px solid #ebebeb" }}>
             <div style={{ marginBottom: "1rem" }}>
               {activeTab === 0 ? (
                 <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#ccc" strokeWidth="1.3">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                  <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
                 </svg>
               ) : activeTab === 1 ? (
                 <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#ccc" strokeWidth="1.3">
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               ) : (
                 <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#ccc" strokeWidth="1.3">
-                  <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                  <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
               )}
             </div>
@@ -354,7 +272,7 @@ export default function BookingsPage() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {filtered.map(b => {
+            {filtered.map((b) => {
               const sc = statusColor(b.status);
               return (
                 <div key={b.id} style={{
@@ -363,11 +281,10 @@ export default function BookingsPage() {
                   boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
                   transition: "box-shadow 0.2s",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.1)")}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.06)")}
+                  onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.1)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.06)")}
                 >
                   <div style={{ display: "flex", gap: 0 }}>
-                    {/* Villa image */}
                     <div style={{ width: 180, flexShrink: 0, position: "relative" }}>
                       <img src={b.img} alt={b.villaName} style={{ width: "100%", height: "100%", objectFit: "cover", minHeight: 160, display: "block" }} />
                       <div style={{
@@ -378,7 +295,6 @@ export default function BookingsPage() {
                       }}>{statusLabel(b.status)}</div>
                     </div>
 
-                    {/* Content */}
                     <div style={{ flex: 1, padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
@@ -387,23 +303,19 @@ export default function BookingsPage() {
                         </div>
                         <p style={{ fontSize: "0.78rem", color: "#888", display: "flex", alignItems: "center", gap: 4, marginBottom: "1rem" }}>
                           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#bbb" strokeWidth="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
                           </svg>
                           {b.location}
                         </p>
 
-                        {/* Date chips */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: "1rem" }}>
                           {[
-                            { label: "Check-in",  value: fmtDate(b.checkIn),  icon: "M3 16l4 4 14-14" },
-                            { label: "Check-out", value: fmtDate(b.checkOut), icon: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" },
-                          ].map(d => (
-                            <div key={d.label} style={{
-                              background: "#F5F5F5", borderRadius: 10, padding: "8px 12px",
-                              display: "flex", alignItems: "center", gap: 8,
-                            }}>
+                            { label: "Check-in", value: fmtDate(b.checkIn) },
+                            { label: "Check-out", value: fmtDate(b.checkOut) },
+                          ].map((d) => (
+                            <div key={d.label} style={{ background: "#F5F5F5", borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
                               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={BRAND_RED} strokeWidth="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                                <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
                               </svg>
                               <div>
                                 <p style={{ fontSize: "0.6rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.08em" }}>{d.label}</p>
@@ -413,24 +325,22 @@ export default function BookingsPage() {
                           ))}
                         </div>
 
-                        {/* Meta */}
                         <div style={{ display: "flex", gap: "1.25rem", marginBottom: "1rem" }}>
                           <span style={{ fontSize: "0.78rem", color: "#888", display: "flex", alignItems: "center", gap: 5 }}>
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#aaa" strokeWidth="1.8">
-                              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
                             </svg>
                             {b.guests} guests
                           </span>
                           <span style={{ fontSize: "0.78rem", color: "#888", display: "flex", alignItems: "center", gap: 5 }}>
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#aaa" strokeWidth="1.8">
-                              <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                              <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
                             </svg>
                             {b.nights} nights
                           </span>
                         </div>
                       </div>
 
-                      {/* Price + Actions */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div>
                           <p style={{ fontSize: "0.65rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>Total</p>
@@ -441,29 +351,18 @@ export default function BookingsPage() {
 
                         <div style={{ display: "flex", gap: 8 }}>
                           {b.status === "upcoming" && (
-                            <>
-                              <button onClick={() => setCancelTarget(b.id)} style={{
-                                height: 36, padding: "0 16px",
-                                background: "transparent", border: "1.5px solid #e5e5e5",
-                                borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
-                                color: "#555", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                              }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#aaa"; }}
-                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#e5e5e5"; }}
-                              >Cancel</button>
-                              <button style={{
-                                height: 36, padding: "0 16px",
-                                background: BRAND_RED, border: "none",
-                                borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
-                                color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                              }}
-                              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = "0.85")}
-                              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = "1")}
-                              >Pay Now</button>
-                            </>
+                            <button onClick={() => setCancelTarget(b.id)} style={{
+                              height: 36, padding: "0 16px",
+                              background: "transparent", border: "1.5px solid #e5e5e5",
+                              borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
+                              color: "#555", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                            }}
+                              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#aaa"; }}
+                              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e5e5e5"; }}
+                            >Cancel</button>
                           )}
                           {b.status === "completed" && (
-                            <a href={`/dashboard/villas`} style={{
+                            <a href="/dashboard/villas" style={{
                               height: 36, padding: "0 16px",
                               background: "#F0FDF4", border: "1px solid #86EFAC",
                               borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
@@ -484,19 +383,12 @@ export default function BookingsPage() {
 
       {/* ── CANCEL MODAL ── */}
       {cancelTarget && (
-        <div onClick={() => setCancelTarget(null)} style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
-          zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem",
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: "#fff", borderRadius: 20, padding: "2rem",
-            width: "100%", maxWidth: 400,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-          }}>
+        <div onClick={() => setCancelTarget(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, padding: "2rem", width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
               <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#FFF5F5", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke={BRAND_RED} strokeWidth="1.8">
-                  <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                  <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
               </div>
             </div>
@@ -507,16 +399,8 @@ export default function BookingsPage() {
               Are you sure you want to cancel this booking? This action cannot be undone.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setCancelTarget(null)} style={{
-                flex: 1, height: 44, background: "#F5F5F5", border: "none",
-                borderRadius: 12, fontSize: "0.88rem", fontWeight: 600,
-                color: "#555", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              }}>Keep it</button>
-              <button onClick={() => handleCancel(cancelTarget)} style={{
-                flex: 1, height: 44, background: BRAND_RED, border: "none",
-                borderRadius: 12, fontSize: "0.88rem", fontWeight: 600,
-                color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              }}>Cancel Booking</button>
+              <button onClick={() => setCancelTarget(null)} style={{ flex: 1, height: 44, background: "#F5F5F5", border: "none", borderRadius: 12, fontSize: "0.88rem", fontWeight: 600, color: "#555", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Keep it</button>
+              <button onClick={() => handleCancel(cancelTarget)} style={{ flex: 1, height: 44, background: BRAND_RED, border: "none", borderRadius: 12, fontSize: "0.88rem", fontWeight: 600, color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel Booking</button>
             </div>
           </div>
         </div>
