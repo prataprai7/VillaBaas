@@ -25,6 +25,17 @@ export class BookingController {
         }
     }
 
+    // NEW: single-booking fetch, used by the success page after payment.
+    async getBookingById(req: Request, res: Response) {
+        try {
+            const userId  = (req.user as any)._id.toString();
+            const booking = await bookingService.getBookingById(req.params.id, userId);
+            return ApiResponseHelper.success(res, booking, "Booking fetched successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
+        }
+    }
+
     async payBooking(req: Request, res: Response) {
         try {
             const userId        = (req.user as any)._id.toString();
