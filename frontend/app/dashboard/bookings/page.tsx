@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { getBookings, updateBookingStatus, StoredBooking, BookingStatus } from "@/lib/data/bookings-store";
+import { getMyBookings, cancelBooking, Booking, BookingStatus } from "@/lib/api/bookings-api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
 
-const TABS = ["Upcoming", "Completed", "Cancelled"];
+const TABS: { label: string; statuses: BookingStatus[] }[] = [
+  { label: "Upcoming", statuses: ["unpaid", "paid"] },
+  { label: "Completed", statuses: ["completed"] },
+  { label: "Cancelled", statuses: ["cancelled"] },
+];
 
 const NAV_LINKS = [
   { label: "Home", href: "/dashboard" },
@@ -22,35 +25,49 @@ function fmtDate(d: string) {
 }
 
 function statusColor(s: BookingStatus) {
-  if (s === "upcoming") return { bg: "#FFF5F5", border: "#FECACA", text: BRAND_RED };
+  if (s === "unpaid") return { bg: "#FFF7ED", border: "#FDBA74", text: "#C2650A" };
+  if (s === "paid") return { bg: "#FFF5F5", border: "#FECACA", text: BRAND_RED };
   if (s === "completed") return { bg: "#F0FDF4", border: "#86EFAC", text: "#16A34A" };
   return { bg: "#F9FAFB", border: "#E5E7EB", text: "#6B7280" };
 }
 
 function statusLabel(s: BookingStatus) {
-  if (s === "upcoming") return "Upcoming";
+  if (s === "unpaid") return "Awaiting Payment";
+  if (s === "paid") return "Upcoming";
   if (s === "completed") return "Completed ✓";
   return "Cancelled";
 }
 
 export default function BookingsPage() {
-  const router = useRouter();
   const { user, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState(0);
-  const [bookings, setBookings] = useState<StoredBooking[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
 
-  // Load real bookings from local storage on mount (client-side only)
+  async function loadBookings() {
+    setLoading(true);
+    try {
+      const data = await getMyBookings();
+      setBookings(data);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "Could not load bookings");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    setBookings(getBookings());
-    setLoaded(true);
+    loadBookings();
   }, []);
 
   useEffect(() => {
@@ -67,22 +84,24 @@ export default function BookingsPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const filtered = bookings.filter((b) => {
-    if (activeTab === 0) return b.status === "upcoming";
-    if (activeTab === 1) return b.status === "completed";
-    return b.status === "cancelled";
-  });
+  const filtered = bookings.filter((b) => TABS[activeTab].statuses.includes(b.status));
 
-  function handleCancel(id: string) {
-    updateBookingStatus(id, "cancelled");
-    setBookings(getBookings());
-    setCancelTarget(null);
-    setToast({ msg: "Booking cancelled successfully", type: "success" });
+  async function handleCancel(id: string) {
+    setCancelling(true);
+    try {
+      await cancelBooking(id);
+      await loadBookings();
+      setCancelTarget(null);
+      setToast({ msg: "Booking cancelled successfully", type: "success" });
+    } catch (err) {
+      setToast({ msg: err instanceof Error ? err.message : "Could not cancel booking", type: "error" });
+    } finally {
+      setCancelling(false);
+    }
   }
 
   return (
     <div style={{ minHeight: "100vh", background: "#EEEEEE", fontFamily: "'DM Sans', sans-serif", color: "#1C1C1C", margin: 0, padding: 0 }}>
-      {/* ── TOAST ── */}
       {toast && (
         <div style={{
           position: "fixed", top: 20, right: 20, zIndex: 1000,
@@ -211,10 +230,9 @@ export default function BookingsPage() {
 
       {/* ── MAIN ── */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem 4vw" }}>
-        {/* ── TABS ── */}
         <div style={{ display: "flex", background: "#E5E5E5", borderRadius: 14, padding: 4, marginBottom: "2rem" }}>
           {TABS.map((tab, i) => (
-            <button key={tab} onClick={() => setActiveTab(i)} style={{
+            <button key={tab.label} onClick={() => setActiveTab(i)} style={{
               flex: 1, height: 42, border: "none", borderRadius: 10,
               fontSize: "0.88rem", fontWeight: 600, cursor: "pointer",
               fontFamily: "'DM Sans', sans-serif",
@@ -223,25 +241,29 @@ export default function BookingsPage() {
               transition: "all 0.2s",
               boxShadow: activeTab === i ? "0 4px 14px rgba(218,11,0,0.25)" : "none",
             }}>
-              {tab}
+              {tab.label}
               <span style={{
                 marginLeft: 6, fontSize: "0.72rem",
                 background: activeTab === i ? "rgba(255,255,255,0.25)" : "#e0e0e0",
                 color: activeTab === i ? "#fff" : "#888",
                 padding: "2px 7px", borderRadius: 10,
               }}>
-                {bookings.filter((b) =>
-                  i === 0 ? b.status === "upcoming" :
-                  i === 1 ? b.status === "completed" :
-                  b.status === "cancelled"
-                ).length}
+                {bookings.filter((b) => tab.statuses.includes(b.status)).length}
               </span>
             </button>
           ))}
         </div>
 
-        {/* ── BOOKING LIST ── */}
-        {!loaded ? null : filtered.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "4rem 2rem", color: "#888" }}>Loading your bookings...</div>
+        ) : loadError ? (
+          <div style={{ textAlign: "center", padding: "4rem 2rem", background: "#fff", borderRadius: 20, border: "1px solid #ebebeb" }}>
+            <p style={{ fontSize: "0.9rem", color: BRAND_RED, marginBottom: "1rem" }}>{loadError}</p>
+            <button onClick={loadBookings} style={{ padding: "10px 24px", background: BRAND_RED, color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              Try Again
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "5rem 2rem", background: "#fff", borderRadius: 20, border: "1px solid #ebebeb" }}>
             <div style={{ marginBottom: "1rem" }}>
               {activeTab === 0 ? (
@@ -259,10 +281,10 @@ export default function BookingsPage() {
               )}
             </div>
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.2rem", color: "#aaa", marginBottom: 6 }}>
-              No {TABS[activeTab].toLowerCase()} bookings
+              No {TABS[activeTab].label.toLowerCase()} bookings
             </p>
             <p style={{ fontSize: "0.85rem", color: "#bbb", marginBottom: "1.5rem" }}>
-              Your {TABS[activeTab].toLowerCase()} stays will appear here
+              Your {TABS[activeTab].label.toLowerCase()} stays will appear here
             </p>
             <a href="/dashboard/villas" style={{
               display: "inline-block", padding: "10px 24px",
@@ -275,7 +297,7 @@ export default function BookingsPage() {
             {filtered.map((b) => {
               const sc = statusColor(b.status);
               return (
-                <div key={b.id} style={{
+                <div key={b._id} style={{
                   background: "#fff", borderRadius: 20, overflow: "hidden",
                   border: "1px solid #f0f0f0",
                   boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
@@ -286,7 +308,7 @@ export default function BookingsPage() {
                 >
                   <div style={{ display: "flex", gap: 0 }}>
                     <div style={{ width: 180, flexShrink: 0, position: "relative" }}>
-                      <img src={b.img} alt={b.villaName} style={{ width: "100%", height: "100%", objectFit: "cover", minHeight: 160, display: "block" }} />
+                      <img src={b.image} alt={b.villaName} style={{ width: "100%", height: "100%", objectFit: "cover", minHeight: 160, display: "block" }} />
                       <div style={{
                         position: "absolute", top: 10, left: 10,
                         background: sc.bg, border: `1px solid ${sc.border}`,
@@ -299,7 +321,7 @@ export default function BookingsPage() {
                       <div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                           <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 700, color: "#1C1C1C" }}>{b.villaName}</h3>
-                          <span style={{ fontSize: "0.72rem", color: "#aaa" }}>#{b.id}</span>
+                          <span style={{ fontSize: "0.72rem", color: "#aaa" }}>#{b._id.slice(-8).toUpperCase()}</span>
                         </div>
                         <p style={{ fontSize: "0.78rem", color: "#888", display: "flex", alignItems: "center", gap: 4, marginBottom: "1rem" }}>
                           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#bbb" strokeWidth="2">
@@ -350,8 +372,8 @@ export default function BookingsPage() {
                         </div>
 
                         <div style={{ display: "flex", gap: 8 }}>
-                          {b.status === "upcoming" && (
-                            <button onClick={() => setCancelTarget(b.id)} style={{
+                          {(b.status === "unpaid" || b.status === "paid") && (
+                            <button onClick={() => setCancelTarget(b._id)} style={{
                               height: 36, padding: "0 16px",
                               background: "transparent", border: "1.5px solid #e5e5e5",
                               borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
@@ -360,6 +382,15 @@ export default function BookingsPage() {
                               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#aaa"; }}
                               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#e5e5e5"; }}
                             >Cancel</button>
+                          )}
+                          {b.status === "unpaid" && (
+                            <a href={`/dashboard/bookings/payment?villaId=&checkIn=${b.checkIn}&checkOut=${b.checkOut}&guests=${b.guests}&total=${b.totalPrice}`} style={{
+                              height: 36, padding: "0 16px",
+                              background: BRAND_RED, border: "none",
+                              borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
+                              color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                              display: "flex", alignItems: "center", textDecoration: "none",
+                            }}>Pay Now</a>
                           )}
                           {b.status === "completed" && (
                             <a href="/dashboard/villas" style={{
@@ -383,7 +414,7 @@ export default function BookingsPage() {
 
       {/* ── CANCEL MODAL ── */}
       {cancelTarget && (
-        <div onClick={() => setCancelTarget(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+        <div onClick={() => !cancelling && setCancelTarget(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, padding: "2rem", width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
               <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#FFF5F5", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -399,8 +430,10 @@ export default function BookingsPage() {
               Are you sure you want to cancel this booking? This action cannot be undone.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setCancelTarget(null)} style={{ flex: 1, height: 44, background: "#F5F5F5", border: "none", borderRadius: 12, fontSize: "0.88rem", fontWeight: 600, color: "#555", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Keep it</button>
-              <button onClick={() => handleCancel(cancelTarget)} style={{ flex: 1, height: 44, background: BRAND_RED, border: "none", borderRadius: 12, fontSize: "0.88rem", fontWeight: 600, color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel Booking</button>
+              <button onClick={() => setCancelTarget(null)} disabled={cancelling} style={{ flex: 1, height: 44, background: "#F5F5F5", border: "none", borderRadius: 12, fontSize: "0.88rem", fontWeight: 600, color: "#555", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Keep it</button>
+              <button onClick={() => handleCancel(cancelTarget)} disabled={cancelling} style={{ flex: 1, height: 44, background: BRAND_RED, border: "none", borderRadius: 12, fontSize: "0.88rem", fontWeight: 600, color: "#fff", cursor: cancelling ? "not-allowed" : "pointer", opacity: cancelling ? 0.7 : 1, fontFamily: "'DM Sans', sans-serif" }}>
+                {cancelling ? "Cancelling..." : "Cancel Booking"}
+              </button>
             </div>
           </div>
         </div>
@@ -410,10 +443,6 @@ export default function BookingsPage() {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        @media (max-width: 640px) {
-          .booking-card-inner { flex-direction: column !important; }
-          .booking-img { width: 100% !important; height: 180px !important; }
-        }
       `}</style>
     </div>
   );
