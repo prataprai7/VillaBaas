@@ -7,7 +7,7 @@ import { ApiResponseHelper } from "./utils/apihelper.util";
 import userRoutes from "./routes/user.route";
 import adminUserRoutes from "./routes/admin/user.route";
 import khaltiRoutes from "./routes/khalti.route";
-
+import adminVillaRoutes from "./routes/villa.route";
 
 const app: Application = express();
 
@@ -51,6 +51,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/v1/auth",            userRoutes);
 app.use("/api/v1/admin/users",     adminUserRoutes);
 app.use("/api/v1/payments/khalti", khaltiRoutes);
+app.use("/api/v1/admin/villas",    adminVillaRoutes);
 
 app.use((req: Request, res: Response) => {
   return res.status(404).json({ message: "API not found" });
