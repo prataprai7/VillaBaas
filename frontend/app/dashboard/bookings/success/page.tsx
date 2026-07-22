@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { getBookingById } from "@/lib/data/bookings-store";
+import { getBookingById, Booking } from "@/lib/api/bookings-api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
@@ -30,12 +30,27 @@ export default function BookingSuccessPage() {
   const { user, logout } = useAuth();
 
   const bookingId = searchParams.get("bookingId");
-  const booking = bookingId ? getBookingById(bookingId) : undefined;
+
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [animate, setAnimate] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
+
+  useEffect(() => {
+    if (!bookingId) {
+      setLoadError("Missing booking reference");
+      setLoading(false);
+      return;
+    }
+    getBookingById(bookingId)
+      .then(setBooking)
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Could not load booking"))
+      .finally(() => setLoading(false));
+  }, [bookingId]);
 
   useEffect(() => {
     const t = setTimeout(() => setAnimate(true), 100);
@@ -50,16 +65,26 @@ export default function BookingSuccessPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  if (!booking) {
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "0.95rem", color: "#888" }}>Loading your booking...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !booking) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
-        <p style={{ fontSize: "1.1rem", color: "#aaa", marginBottom: "1rem" }}>Booking not found</p>
+        <p style={{ fontSize: "1.1rem", color: "#aaa", marginBottom: "1rem" }}>{loadError || "Booking not found"}</p>
         <button onClick={() => router.push("/dashboard/bookings")} style={{ padding: "10px 24px", background: BRAND_RED, color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
           View My Bookings
         </button>
       </div>
     );
   }
+
+  const nights = booking.nights;
 
   return (
     <div style={{ minHeight: "100vh", background: "#EEEEEE", fontFamily: "'DM Sans', sans-serif", color: "#1C1C1C", margin: 0, padding: 0 }}>
@@ -153,7 +178,6 @@ export default function BookingSuccessPage() {
 
       {/* ── CONTENT ── */}
       <div style={{ maxWidth: 520, margin: "0 auto", padding: "2.5rem 4vw 4rem" }}>
-        {/* ── SUCCESS ICON ── */}
         <div style={{
           display: "flex", flexDirection: "column", alignItems: "center",
           textAlign: "center", marginBottom: "2rem",
@@ -182,7 +206,6 @@ export default function BookingSuccessPage() {
           </p>
         </div>
 
-        {/* ── BOOKING CARD ── */}
         <div style={{
           background: "#fff", borderRadius: 20, overflow: "hidden",
           boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
@@ -190,7 +213,7 @@ export default function BookingSuccessPage() {
           transform: animate ? "translateY(0)" : "translateY(20px)",
           transition: "all 0.5s ease 0.15s",
         }}>
-          <img src={booking.img} alt={booking.villaName} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+          <img src={booking.image} alt={booking.villaName} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
 
           <div style={{ padding: "1.5rem" }}>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.2rem", fontWeight: 700, color: "#1C1C1C", marginBottom: 4 }}>
@@ -210,7 +233,7 @@ export default function BookingSuccessPage() {
               marginBottom: "1.25rem",
             }}>
               <span style={{ fontSize: "0.72rem", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em" }}>Booking ID</span>
-              <span style={{ fontSize: "0.9rem", fontWeight: 700, color: BRAND_RED }}>#{booking.id}</span>
+              <span style={{ fontSize: "0.9rem", fontWeight: 700, color: BRAND_RED }}>#{booking._id.slice(-8).toUpperCase()}</span>
             </div>
 
             <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
@@ -232,7 +255,7 @@ export default function BookingSuccessPage() {
                   <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
                 </svg>
               } />
-              <InfoBox label="Duration" value={`${booking.nights} night${booking.nights > 1 ? "s" : ""}`} icon={
+              <InfoBox label="Duration" value={`${nights} night${nights > 1 ? "s" : ""}`} icon={
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={BRAND_RED} strokeWidth="1.8">
                   <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
                 </svg>
@@ -257,13 +280,12 @@ export default function BookingSuccessPage() {
                 fontSize: "0.75rem", fontWeight: 700, color: "#16A34A",
               }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16A34A" }} />
-                Paid
+                {booking.status === "paid" ? "Paid" : booking.status}
               </span>
             </div>
           </div>
         </div>
 
-        {/* ── BUTTONS ── */}
         <div style={{
           display: "flex", flexDirection: "column", gap: 12, marginTop: "2rem",
           opacity: animate ? 1 : 0,
