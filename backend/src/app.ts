@@ -6,6 +6,8 @@ import { HttpException } from "./exceptions/http-exception";
 import { ApiResponseHelper } from "./utils/apihelper.util";
 import userRoutes from "./routes/user.route";
 import adminUserRoutes from "./routes/admin/user.route";
+import khaltiRoutes from "./routes/khalti.route";
+
 
 const app: Application = express();
 
@@ -13,19 +15,17 @@ const app: Application = express();
 app.use(
   cors({
     origin: (origin, callback) => {
-      
       if (!origin) return callback(null, true);
 
       const allowedOrigins = [
-        "http://localhost:3000",   
-        "http://localhost:5173",   
+        "http://localhost:3000",
+        "http://localhost:5173",
       ];
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      
       const isLocalNetwork =
         /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) ||
         /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) ||
@@ -48,8 +48,9 @@ app.use(morgan("combined"));
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-app.use("/api/v1/auth",        userRoutes);
-app.use("/api/v1/admin/users", adminUserRoutes);
+app.use("/api/v1/auth",            userRoutes);
+app.use("/api/v1/admin/users",     adminUserRoutes);
+app.use("/api/v1/payments/khalti", khaltiRoutes);
 
 app.use((req: Request, res: Response) => {
   return res.status(404).json({ message: "API not found" });
