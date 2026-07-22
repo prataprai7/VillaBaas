@@ -31,6 +31,16 @@ export class BookingService {
         return bookingRepository.findByUser(userId);
     }
 
+    // NEW: single-booking lookup with ownership check. Used by the Khalti
+    // initiate/verify flow, and by the frontend success page.
+    async getBookingById(bookingId: string, userId: string): Promise<IBooking> {
+        const booking = await bookingRepository.findById(bookingId);
+        if (!booking) throw new HttpException(404, "Booking not found");
+        if (booking.userId.toString() !== userId)
+            throw new HttpException(403, "Forbidden — not your booking");
+        return booking;
+    }
+
     async payBooking(bookingId: string, userId: string, paymentMethod: string): Promise<IBooking> {
         const booking = await bookingRepository.findById(bookingId);
         if (!booking) throw new HttpException(404, "Booking not found");
@@ -54,6 +64,34 @@ export class BookingService {
         }
 
         return updated;
+    }
+
+    // NEW: called by the Khalti verify step. Re-checks ownership and status,
+    // AND cross-checks the amount Khalti actually confirmed against the
+    // booking's real totalPrice before ever marking it paid — so a booking
+    // can never be marked paid based on a client-supplied amount alone.
+    async verifyAndPayBooking(
+        bookingId: string,
+        userId: string,
+        paymentMethod: string,
+        verifiedAmountNPR: number
+    ): Promise<IBooking> {
+        const booking = await this.getBookingById(bookingId, userId);
+
+        if (booking.status === "cancelled")
+            throw new HttpException(400, "Cannot pay a cancelled booking");
+        if (booking.status === "paid" || booking.status === "completed")
+            throw new HttpException(400, "Booking has already been paid");
+
+        // Guard against floating point cents mismatches with a tiny epsilon
+        if (Math.abs(booking.totalPrice - verifiedAmountNPR) > 0.5) {
+            throw new HttpException(
+                400,
+                `Paid amount (NPR ${verifiedAmountNPR}) does not match booking total (NPR ${booking.totalPrice})`
+            );
+        }
+
+        return this.payBooking(bookingId, userId, paymentMethod);
     }
 
     async cancelBooking(bookingId: string, userId: string): Promise<IBooking> {
