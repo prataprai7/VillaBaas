@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
 import { getVillaById } from "@/lib/data/villas";
-import { addBooking, genBookingId } from "@/lib/data/bookings-store";
+import { createBooking, initiateKhaltiPayment } from "@/lib/api/bookings-api";
 
 type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
 
@@ -34,6 +34,7 @@ export default function PaymentPage() {
   const [selected, setSelected] = useState<PaymentMethod>("esewa");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showEsewaScreen, setShowEsewaScreen] = useState(false);
+  const [khaltiError, setKhaltiError] = useState<string | null>(null);
 
   const villa = villaId ? getVillaById(Number(villaId)) : undefined;
 
@@ -48,10 +49,7 @@ export default function PaymentPage() {
     );
   }
 
-  // Captured here, after the guard, so closures below (handlePay, handleSuccess)
-  // don't hit TS's "possibly undefined" limitation on closured variables.
   const currentVilla = villa;
-
   const nights = nightsBetween(checkIn, checkOut);
   const totalPrice = `NPR ${total.toLocaleString()}`;
 
@@ -60,30 +58,42 @@ export default function PaymentPage() {
       setShowEsewaScreen(true);
       return;
     }
+
+    if (selected === "khalti") {
+      setKhaltiError(null);
+      setIsProcessing(true);
+      try {
+        // Create the real, unpaid booking in MongoDB first — totalPrice is
+        // computed server-side from pricePerNight * nights, not trusted from the URL.
+        const booking = await createBooking({
+          villaName: currentVilla.name,
+          villaType: currentVilla.type,
+          location: currentVilla.location,
+          image: currentVilla.img,
+          checkIn,
+          checkOut,
+          guests,
+          pricePerNight: currentVilla.price,
+        });
+
+        // booking._id becomes Khalti's purchase_order_id, so it's handed
+        // straight back to us on return — no sessionStorage juggling needed.
+        const khaltiResult = await initiateKhaltiPayment(booking._id);
+
+        window.location.href = khaltiResult.payment_url;
+      } catch (err) {
+        setIsProcessing(false);
+        setKhaltiError(err instanceof Error ? err.message : "Something went wrong starting Khalti payment");
+      }
+      return;
+    }
+
+    // Card / cash — still simulated for now; migrate to createBooking + a
+    // real payment method once those gateways are wired up too.
     setIsProcessing(true);
     await new Promise((r) => setTimeout(r, 2000));
     setIsProcessing(false);
-    await handleSuccess();
-  }
-
-  async function handleSuccess() {
-    const bookingId = genBookingId();
-    addBooking({
-      id: bookingId,
-      villaId: currentVilla.id,
-      villaName: currentVilla.name,
-      location: currentVilla.location,
-      img: currentVilla.img,
-      checkIn,
-      checkOut,
-      guests,
-      nights,
-      totalPrice: total,
-      status: "upcoming",
-      paymentMethod: selected,
-      createdAt: new Date().toISOString(),
-    });
-    router.push(`/dashboard/bookings/success?bookingId=${bookingId}`);
+    router.push("/dashboard/bookings");
   }
 
   if (showEsewaScreen) {
@@ -92,7 +102,7 @@ export default function PaymentPage() {
         totalPrice={totalPrice}
         villaName={currentVilla.name}
         onBack={() => setShowEsewaScreen(false)}
-        onSuccess={handleSuccess}
+        onSuccess={() => router.push("/dashboard/bookings")}
       />
     );
   }
@@ -106,7 +116,6 @@ export default function PaymentPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#EEEEEE", fontFamily: "'DM Sans', sans-serif", color: "#1C1C1C" }}>
-      {/* ── Top bar ─────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "1rem 4vw", background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
         <button onClick={() => router.back()} style={{ background: "none", border: "none", cursor: "pointer", display: "flex" }}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1C1C1C" strokeWidth="2.2">
@@ -117,7 +126,6 @@ export default function PaymentPage() {
       </div>
 
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "2rem 4vw 8rem" }}>
-        {/* ── Order summary ───────────────────────────────────── */}
         <div style={{ ...card, display: "flex", gap: 14 }}>
           <img
             src={currentVilla.img}
@@ -146,7 +154,6 @@ export default function PaymentPage() {
             label="eSewa"
             subtitle="Pay via eSewa digital wallet"
             emoji="💚"
-            badge="Recommended"
           />
           <PaymentTile
             selected={selected === "khalti"}
@@ -155,6 +162,7 @@ export default function PaymentPage() {
             label="Khalti"
             subtitle="Pay via Khalti digital wallet"
             emoji="💜"
+            badge="Recommended"
           />
           <PaymentTile
             selected={selected === "card"}
@@ -175,14 +183,18 @@ export default function PaymentPage() {
           />
         </div>
 
-        {/* ── Total reminder ───────────────────────────────────── */}
         <div style={{ marginTop: 24, borderRadius: 16, padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFF5F5", border: `1px solid rgba(218,11,0,0.2)` }}>
           <span style={{ fontSize: "0.9rem", color: "#1C1C1C" }}>Total Amount</span>
           <span style={{ fontSize: "1.1rem", fontWeight: 700, color: BRAND_RED }}>{totalPrice}</span>
         </div>
+
+        {khaltiError && (
+          <div style={{ marginTop: 12, borderRadius: 12, padding: "0.85rem 1rem", background: "#FEF2F2", border: "1px solid #FECACA" }}>
+            <p style={{ fontSize: "0.8rem", color: "#B91C1C" }}>{khaltiError}</p>
+          </div>
+        )}
       </div>
 
-      {/* ── Pay button (fixed bottom) ───────────────────────────── */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", padding: "0.75rem 4vw 1.5rem", boxShadow: "0 -4px 16px rgba(0,0,0,0.08)" }}>
         <div style={{ maxWidth: 640, margin: "0 auto" }}>
           <button
@@ -203,11 +215,15 @@ export default function PaymentPage() {
             }}
           >
             {isProcessing
-              ? "Processing..."
+              ? selected === "khalti"
+                ? "Redirecting to Khalti..."
+                : "Processing..."
               : selected === "cash"
               ? "Confirm Booking"
               : selected === "esewa"
               ? "Continue with eSewa"
+              : selected === "khalti"
+              ? "Continue with Khalti"
               : `Pay ${totalPrice}`}
           </button>
         </div>
