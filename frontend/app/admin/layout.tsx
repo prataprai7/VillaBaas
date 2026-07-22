@@ -42,29 +42,39 @@ function AdminSidebar() {
         exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
     const navItems = [
-        {
-            href: "/admin", label: "Overview", exact: true,
-            icon: (
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <rect x="3" y="3" width="7" height="9" rx="1.5"/>
-                    <rect x="14" y="3" width="7" height="5" rx="1.5"/>
-                    <rect x="14" y="12" width="7" height="9" rx="1.5"/>
-                    <rect x="3" y="16" width="7" height="5" rx="1.5"/>
-                </svg>
-            ),
-        },
-        {
-            href: "/admin/users", label: "Users",
-            icon: (
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 010 7.75"/>
-                </svg>
-            ),
-        },
-    ];
+    {
+        href: "/admin", label: "Overview", exact: true,
+        icon: (
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="3" y="3" width="7" height="9" rx="1.5"/>
+                <rect x="14" y="3" width="7" height="5" rx="1.5"/>
+                <rect x="14" y="12" width="7" height="9" rx="1.5"/>
+                <rect x="3" y="16" width="7" height="5" rx="1.5"/>
+            </svg>
+        ),
+    },
+    {
+        href: "/admin/users", label: "Users",
+        icon: (
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                <path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+        ),
+    },
+    {
+        href: "/admin/villas", label: "Villas",
+        icon: (
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
+                <path d="M9 22V12h6v10"/>
+            </svg>
+        ),
+    },
+];
+    
 
     return (
         <aside style={{
@@ -212,11 +222,24 @@ function AdminHeader() {
     const pathname = usePathname();
     const segments = pathname.split("/").filter(Boolean);
 
-    const TITLES: Record<string, string> = {
-        admin: "Overview", users: "Users", create: "Create User", edit: "Edit User",
+    const RESOURCE_LABELS: Record<string, string> = {
+        users: "User",
+        villas: "Villa",
     };
+
     const last = segments[segments.length - 1] ?? "admin";
-    const title = TITLES[last] ?? "User Details";
+    const resourceSegment = segments[1];
+    const resourceLabel = RESOURCE_LABELS[resourceSegment] ?? "";
+
+    const TITLES: Record<string, string> = {
+        admin: "Overview",
+        users: "Users",
+        villas: "Villas",
+        create: `Create ${resourceLabel}`.trim(),
+        edit: `Edit ${resourceLabel}`.trim(),
+    };
+
+    const title = TITLES[last] ?? (resourceLabel ? `${resourceLabel} Details` : "Details");
 
     return (
         <header style={{
