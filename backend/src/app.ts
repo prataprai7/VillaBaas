@@ -8,6 +8,8 @@ import userRoutes from "./routes/user.route";
 import adminUserRoutes from "./routes/admin/user.route";
 import khaltiRoutes from "./routes/khalti.route";
 import adminVillaRoutes from "./routes/villa.route";
+import publicVillaRoutes from "./routes/public-villa.route";
+
 
 const app: Application = express();
 
@@ -52,6 +54,7 @@ app.use("/api/v1/auth",            userRoutes);
 app.use("/api/v1/admin/users",     adminUserRoutes);
 app.use("/api/v1/payments/khalti", khaltiRoutes);
 app.use("/api/v1/admin/villas",    adminVillaRoutes);
+app.use("/api/v1/villas",          publicVillaRoutes);
 
 app.use((req: Request, res: Response) => {
   return res.status(404).json({ message: "API not found" });
