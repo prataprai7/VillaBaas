@@ -55,3 +55,12 @@ export async function getVillaById(id: string): Promise<Villa> {
   const res = await fetch(`${API_URL}/api/v1/villas/${id}`);
   return unwrap<Villa>(res);
 }
+
+// Villa images are stored as relative paths like "/uploads/xyz.jpg" — these
+// resolve against the backend (where the file actually lives), not the
+// frontend's own origin. Absolute URLs (e.g. from seed data) pass through unchanged.
+export function resolveImageUrl(path: string): string {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${API_URL}${path}`;
+}

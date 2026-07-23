@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
-import { getVillaById, Villa } from "@/lib/api/villas-api";
+import { getVillaById, Villa, resolveImageUrl } from "@/lib/api/villas-api";
 import { createBooking, initiateKhaltiPayment } from "@/lib/api/bookings-api";
 
 type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
@@ -150,7 +150,7 @@ export default function PaymentPage() {
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "2rem 4vw 8rem" }}>
         <div style={{ ...card, display: "flex", gap: 14 }}>
           <img
-            src={currentVilla.img}
+            src={resolveImageUrl(currentVilla.img)}
             alt={currentVilla.name}
             style={{ width: 76, height: 76, borderRadius: 12, objectFit: "cover", background: "#eee", flexShrink: 0 }}
           />

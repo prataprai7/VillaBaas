@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getTokenCookie } from "@/lib/api/cookies";
-import { getVillaById, Villa } from "@/lib/api/villas-api";
+import { getVillaById, Villa, resolveImageUrl } from "@/lib/api/villas-api";
 
 const API_URL   = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
@@ -32,19 +32,19 @@ export default function BookingConfirmPage() {
   const guests   = Number(searchParams.get("guests") || 1);
   const villaId  = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
 
-  const [villa, setVilla]   = useState<Villa | null>(null);
+  const [villa, setVilla] = useState<Villa | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!villaId) {
-      setLoadError("Invalid villa id");
+      setLoadError("Missing villa id");
       setLoading(false);
       return;
     }
     getVillaById(villaId)
       .then(setVilla)
-      .catch(err => setLoadError(err instanceof Error ? err.message : "Could not load villa"))
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Could not load villa"))
       .finally(() => setLoading(false));
   }, [villaId]);
 
@@ -61,7 +61,7 @@ export default function BookingConfirmPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
-  const token     = getTokenCookie();
+  const token     = getTokenCookie(); // read once, used in handleProceed
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -80,7 +80,7 @@ export default function BookingConfirmPage() {
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
-        <p style={{ fontSize: "1rem", color: "#888" }}>Loading...</p>
+        <p style={{ fontSize: "0.95rem", color: "#888" }}>Loading booking details...</p>
       </div>
     );
   }
@@ -98,6 +98,8 @@ export default function BookingConfirmPage() {
     );
   }
 
+  // Captured here, after the guard, so the handleProceed closure below
+  // doesn't hit TS's "possibly null" limitation on closured variables.
   const currentVilla = villa;
 
   async function handleProceed() {
@@ -113,23 +115,9 @@ export default function BookingConfirmPage() {
 
     setIsLoading(true);
 
-    // When booking API is ready, call it here with the token:
-    // try {
-    //   const res = await fetch(`${API_URL}/api/v1/auth/bookings`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    //     body: JSON.stringify({ villaId: currentVilla._id, checkIn, checkOut, guests }),
-    //   });
-    //   const data = await res.json();
-    //   if (!res.ok) throw new Error(data.message);
-    //   router.push(`/dashboard/bookings/payment?bookingId=${data.data._id}&total=${totalPrice}`);
-    // } catch (err: any) {
-    //   setToast({ msg: err.message || "Booking failed", type: "error" });
-    // } finally {
-    //   setIsLoading(false);
-    // }
-
-    // Mock — navigate to payment page with booking info
+    // Note: the real booking record now gets created on the payment page
+    // itself (see payment/page.tsx's Khalti flow), using this villa's real
+    // pricePerNight — so we just hand off checkIn/checkOut/guests/villaId here.
     setTimeout(() => {
       setIsLoading(false);
       router.push(`/dashboard/bookings/payment?villaId=${currentVilla._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&total=${totalPrice}`);
@@ -153,6 +141,7 @@ export default function BookingConfirmPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#EEEEEE", fontFamily: "'DM Sans', sans-serif", color: "#1C1C1C", margin: 0, padding: 0, paddingBottom: 100 }}>
 
+      {/* ── TOAST ── */}
       {toast && (
         <div style={{
           position: "fixed", top: 20, right: 20, zIndex: 1000,
@@ -166,6 +155,7 @@ export default function BookingConfirmPage() {
         </div>
       )}
 
+      {/* ── NAVBAR ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 300,
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -248,6 +238,7 @@ export default function BookingConfirmPage() {
         </div>
       </nav>
 
+      {/* ── BREADCRUMB ── */}
       <div style={{ background: "#fff", padding: "0.75rem 4vw", borderBottom: "1px solid #f0f0f0" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", alignItems: "center", gap: 8 }}>
           {[
@@ -270,6 +261,7 @@ export default function BookingConfirmPage() {
         </div>
       </div>
 
+      {/* ── CONTENT ── */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "2rem 4vw" }}>
 
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.8rem", fontWeight: 700, color: "#1C1C1C", marginBottom: "0.4rem" }}>
@@ -279,8 +271,9 @@ export default function BookingConfirmPage() {
           Review your booking details before proceeding to payment.
         </p>
 
+        {/* ── VILLA CARD ── */}
         <div style={card}>
-          <img src={currentVilla.img.startsWith("http") ? currentVilla.img : `${API_URL}${currentVilla.img}`} alt={currentVilla.name} style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }} />
+          <img src={resolveImageUrl(currentVilla.img)} alt={currentVilla.name} style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }} />
           <div style={{ padding: "1.25rem" }}>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.3rem", fontWeight: 700, color: "#1C1C1C", marginBottom: 4 }}>{currentVilla.name}</h2>
             <p style={{ fontSize: "0.8rem", color: "#888", display: "flex", alignItems: "center", gap: 4, marginBottom: 8 }}>
@@ -298,13 +291,30 @@ export default function BookingConfirmPage() {
           </div>
         </div>
 
+        {/* ── BOOKING DETAILS ── */}
         <p style={sectionTitle}>Booking Details</p>
         <div style={{ ...card, padding: "1.25rem" }}>
           {[
-            { label: "Check-in",  value: checkIn ? fmtDate(checkIn) : "—", icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
-            { label: "Check-out", value: checkOut ? fmtDate(checkOut) : "—", icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
-            { label: "Duration", value: `${nights} night${nights > 1 ? "s" : ""}`, icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> },
-            { label: "Guests", value: `${guests} guest${guests > 1 ? "s" : ""}`, icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
+            {
+              label: "Check-in",
+              value: checkIn ? fmtDate(checkIn) : "—",
+              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
+            },
+            {
+              label: "Check-out",
+              value: checkOut ? fmtDate(checkOut) : "—",
+              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
+            },
+            {
+              label: "Duration",
+              value: `${nights} night${nights > 1 ? "s" : ""}`,
+              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
+            },
+            {
+              label: "Guests",
+              value: `${guests} guest${guests > 1 ? "s" : ""}`,
+              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>,
+            },
           ].map((row, i, arr) => (
             <div key={row.label}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0" }}>
@@ -321,6 +331,7 @@ export default function BookingConfirmPage() {
           ))}
         </div>
 
+        {/* ── PRICE BREAKDOWN ── */}
         <p style={sectionTitle}>Price Breakdown</p>
         <div style={{ ...card, padding: "1.25rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
@@ -344,6 +355,7 @@ export default function BookingConfirmPage() {
           </div>
         </div>
 
+        {/* ── HOUSE RULES ── */}
         {currentVilla.houseRules.length > 0 && (
           <>
             <p style={sectionTitle}>House Rules</p>
@@ -359,6 +371,7 @@ export default function BookingConfirmPage() {
 
               <div style={{ height: 1, background: "#f0f0f0", margin: "14px 0" }} />
 
+              {/* Agreement checkbox */}
               <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }} onClick={() => setAgreed(v => !v)}>
                 <div style={{
                   width: 22, height: 22, flexShrink: 0, marginTop: 1,
@@ -382,6 +395,7 @@ export default function BookingConfirmPage() {
         )}
       </div>
 
+      {/* ── STICKY BOTTOM CTA ── */}
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
         background: "#fff", padding: "1rem 4vw 1.5rem",
