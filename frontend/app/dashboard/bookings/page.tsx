@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getMyBookings, cancelBooking, Booking, BookingStatus } from "@/lib/api/bookings-api";
+import { resolveImageUrl } from "@/lib/api/villas-api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
@@ -308,7 +309,7 @@ export default function BookingsPage() {
                 >
                   <div style={{ display: "flex", gap: 0 }}>
                     <div style={{ width: 180, flexShrink: 0, position: "relative" }}>
-                      <img src={b.image} alt={b.villaName} style={{ width: "100%", height: "100%", objectFit: "cover", minHeight: 160, display: "block" }} />
+                      <img src={resolveImageUrl(b.image)} alt={b.villaName} style={{ width: "100%", height: "100%", objectFit: "cover", minHeight: 160, display: "block" }} />
                       <div style={{
                         position: "absolute", top: 10, left: 10,
                         background: sc.bg, border: `1px solid ${sc.border}`,

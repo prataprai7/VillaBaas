@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getBookingById, Booking } from "@/lib/api/bookings-api";
+import { resolveImageUrl } from "@/lib/api/villas-api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
@@ -213,7 +214,7 @@ export default function BookingSuccessPage() {
           transform: animate ? "translateY(0)" : "translateY(20px)",
           transition: "all 0.5s ease 0.15s",
         }}>
-          <img src={booking.image} alt={booking.villaName} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+          <img src={resolveImageUrl(booking.image)} alt={booking.villaName} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
 
           <div style={{ padding: "1.5rem" }}>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.2rem", fontWeight: 700, color: "#1C1C1C", marginBottom: 4 }}>
