@@ -3,12 +3,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { VILLAS } from "@/lib/data/villas";
+import { getVillaById, Villa } from "@/lib/api/villas-api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
-
-
 
 const NAV_LINKS = [
   { label: "Home",     href: "/dashboard" },
@@ -17,15 +15,16 @@ const NAV_LINKS = [
   { label: "About",    href: "#" },
 ];
 
-
-
 export default function VillaDetailPage() {
   const params  = useParams();
   const router  = useRouter();
   const { user, logout } = useAuth();
 
-  const id     = Number(params?.id);
-  const villa = VILLAS.find(v => v.id === id)!;
+  const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
+
+  const [villa, setVilla] = useState<Villa | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [isFavorite,    setIsFavorite]    = useState(false);
   const [guests,        setGuests]        = useState(2);
@@ -39,6 +38,21 @@ export default function VillaDetailPage() {
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
 
   useEffect(() => {
+    if (!id) {
+      setLoadError("Invalid villa id");
+      setLoading(false);
+      return;
+    }
+    getVillaById(id)
+      .then((data) => {
+        setVilla(data);
+        setGuests(Math.min(2, data.guests));
+      })
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Could not load villa"))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false);
     }
@@ -46,10 +60,18 @@ export default function VillaDetailPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  if (!villa) {
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "1rem", color: "#888" }}>Loading villa...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !villa) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
-        <p style={{ fontSize: "1.2rem", color: "#aaa", marginBottom: "1rem" }}>Villa not found</p>
+        <p style={{ fontSize: "1.2rem", color: "#aaa", marginBottom: "1rem" }}>{loadError || "Villa not found"}</p>
         <button onClick={() => router.push("/dashboard/villas")} style={{ padding: "10px 24px", background: BRAND_RED, color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
           ← Back to Villas
         </button>
@@ -57,22 +79,27 @@ export default function VillaDetailPage() {
     );
   }
 
-  const allImages = [villa.img, ...villa.additionalImages];
+  // Captured here, after the guard, so the handleBook closure below doesn't
+  // hit TS's "possibly null" limitation on closured variables.
+  const currentVilla = villa;
+
+  const allImages = [currentVilla.img, ...currentVilla.additionalImages];
 
   const nights = checkIn && checkOut
-  ? Math.max(0, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000))
-  : 0;
+    ? Math.max(0, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000))
+    : 0;
 
-const totalPrice = nights > 0 ? villa.price * nights : villa.price;
+  const totalPrice = nights > 0 ? currentVilla.price * nights : currentVilla.price;
 
-function handleBook() {
-  if (!checkIn || !checkOut) {
-    const el = document.getElementById("check-in-input") as HTMLInputElement;
-    el?.focus();
-    return;
+  function handleBook() {
+    if (!checkIn || !checkOut) {
+      const el = document.getElementById("check-in-input") as HTMLInputElement;
+      el?.focus();
+      return;
+    }
+    router.push(`/dashboard/villas/${currentVilla._id}/book?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
   }
-  router.push(`/dashboard/villas/${villa.id}/book?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
-}
+
 
   const card: React.CSSProperties = {
     background: "#fff", borderRadius: 16, padding: "1.25rem", marginBottom: "1rem",
@@ -194,7 +221,6 @@ function handleBook() {
         <img src={allImages[activeImg]} alt={villa.name} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9, transition: "opacity 0.3s" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 40%, rgba(0,0,0,0.6) 100%)" }} />
 
-        {/* Rating badge */}
         <div style={{
           position: "absolute", bottom: 20, right: 24,
           background: "rgba(255,255,255,0.95)", borderRadius: 20,
@@ -205,7 +231,6 @@ function handleBook() {
           <span style={{ fontSize: "0.75rem", color: "#888" }}>{villa.reviews} reviews</span>
         </div>
 
-        {/* Favorite button */}
         <button onClick={() => setIsFavorite(v => !v)} style={{
           position: "absolute", top: 20, right: 24,
           background: "rgba(255,255,255,0.95)", border: "none",
@@ -217,7 +242,6 @@ function handleBook() {
           </svg>
         </button>
 
-        {/* Image counter */}
         {allImages.length > 1 && (
           <div style={{ position: "absolute", bottom: 20, left: 24, display: "flex", gap: 6 }}>
             {allImages.map((_, i) => (
@@ -256,7 +280,6 @@ function handleBook() {
 
         {/* LEFT COLUMN */}
         <div>
-          {/* Name + Location + Price */}
           <div style={{ ...card }}>
             <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.8rem", fontWeight: 700, color: "#1C1C1C", marginBottom: 6 }}>{villa.name}</h1>
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 14 }}>
@@ -270,7 +293,6 @@ function handleBook() {
             </p>
           </div>
 
-          {/* Stats row */}
           <div style={{ ...card, display: "grid", gridTemplateColumns: "1fr 1px 1fr 1px 1fr", gap: 0 }}>
             {[
               { icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M2 4v16M22 4v16M2 12h20M7 8h.01M7 16h.01M17 8h.01M17 16h.01"/></svg>, value: String(villa.rooms), label: "Bedrooms" },
@@ -278,17 +300,16 @@ function handleBook() {
               { icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>, value: String(villa.guests), label: "Max Guests" },
             ].map((s, i) => (
               <React.Fragment key={s.label}>
-    {i > 0 && <div style={{ background: "#f0f0f0", height: "100%" }} />}
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1.25rem", gap: 6 }}>
-      {s.icon}
-      <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1C1C1C" }}>{s.value}</span>
-      <span style={{ fontSize: "0.72rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</span>
-    </div>
-  </React.Fragment>
+                {i > 0 && <div style={{ background: "#f0f0f0", height: "100%" }} />}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1.25rem", gap: 6 }}>
+                  {s.icon}
+                  <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1C1C1C" }}>{s.value}</span>
+                  <span style={{ fontSize: "0.72rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</span>
+                </div>
+              </React.Fragment>
             ))}
           </div>
 
-          {/* Meal inclusions */}
           {(villa.breakfastIncluded || villa.dinnerIncluded) && (
             <div style={card}>
               <p style={sectionTitle}>Included in Package</p>
@@ -315,7 +336,6 @@ function handleBook() {
             </div>
           )}
 
-          {/* Overview */}
           {villa.description && (
             <div style={card}>
               <p style={sectionTitle}>Overview</p>
@@ -323,7 +343,6 @@ function handleBook() {
             </div>
           )}
 
-          {/* House Rules */}
           {villa.houseRules.length > 0 && (
             <div style={card}>
               <p style={sectionTitle}>House Rules</p>
@@ -340,7 +359,6 @@ function handleBook() {
             </div>
           )}
 
-          {/* Amenities */}
           {villa.amenities.length > 0 && (
             <div style={card}>
               <p style={sectionTitle}>Amenities</p>
@@ -376,12 +394,11 @@ function handleBook() {
             <div style={{ padding: "1.5rem" }}>
               <p style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", marginBottom: "0.75rem" }}>Plan Your Stay</p>
 
-              {/* Check-in */}
               <div style={{ border: "1.5px solid #e5e5e5", borderRadius: 12, padding: "12px 14px", marginBottom: 8, cursor: "pointer", position: "relative" }}
                 onClick={() => {
-  const el = document.getElementById("check-in-input") as HTMLInputElement;
-  el?.showPicker?.();
-}}
+                  const el = document.getElementById("check-in-input") as HTMLInputElement;
+                  el?.showPicker?.();
+                }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8">
@@ -404,7 +421,6 @@ function handleBook() {
                 </div>
               </div>
 
-              {/* Guests */}
               <div style={{ border: "1.5px solid #e5e5e5", borderRadius: 12, padding: "12px 14px", marginBottom: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}
                 onClick={() => setGuestModal(true)}
               >
@@ -418,7 +434,6 @@ function handleBook() {
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#888" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
 
-              {/* Price summary */}
               {nights > 0 && (
                 <div style={{ background: "#FFF5F5", border: `1px solid rgba(218,11,0,0.2)`, borderRadius: 12, padding: "14px", marginBottom: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -432,7 +447,6 @@ function handleBook() {
                 </div>
               )}
 
-              {/* CTA Button */}
               <button onClick={handleBook} style={{
                 width: "100%", height: 50,
                 background: BRAND_RED, color: "#fff", border: "none",
@@ -458,7 +472,7 @@ function handleBook() {
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: 480, borderRadius: "24px 24px 0 0", padding: "1.5rem 1.75rem 2.5rem" }}>
             <div style={{ width: 40, height: 4, background: "#e0e0e0", borderRadius: 2, margin: "0 auto 1.25rem" }} />
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.2rem", fontWeight: 700, textAlign: "center", marginBottom: 6 }}>Number of Guests</p>
-            <p style={{ fontSize: "0.82rem", color: "#aaa", textAlign: "center", marginBottom: "1.5rem" }}>Max {villa.guests} guests</p>
+            <p style={{ fontSize: "0.82rem", color: "#aaa", textAlign: "center", marginBottom: "1.5rem" }}>Max {currentVilla.guests} guests</p>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "2rem", marginBottom: "1.75rem" }}>
               <button onClick={() => setGuests(g => Math.max(1, g - 1))} disabled={guests <= 1} style={{
                 width: 44, height: 44, borderRadius: "50%",
@@ -468,11 +482,11 @@ function handleBook() {
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>−</button>
               <span style={{ fontSize: "2.5rem", fontWeight: 700, color: "#1C1C1C", minWidth: 50, textAlign: "center" }}>{guests}</span>
-              <button onClick={() => setGuests(g => Math.min(villa.guests, g + 1))} disabled={guests >= villa.guests} style={{
+              <button onClick={() => setGuests(g => Math.min(currentVilla.guests, g + 1))} disabled={guests >= currentVilla.guests} style={{
                 width: 44, height: 44, borderRadius: "50%",
-                background: guests >= villa.guests ? "#e5e5e5" : BRAND_RED,
+                background: guests >= currentVilla.guests ? "#e5e5e5" : BRAND_RED,
                 border: "none", color: "#fff", fontSize: "1.4rem",
-                cursor: guests >= villa.guests ? "not-allowed" : "pointer",
+                cursor: guests >= currentVilla.guests ? "not-allowed" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>+</button>
             </div>

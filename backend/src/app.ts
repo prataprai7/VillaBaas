@@ -10,7 +10,6 @@ import khaltiRoutes from "./routes/khalti.route";
 import adminVillaRoutes from "./routes/villa.route";
 import publicVillaRoutes from "./routes/public-villa.route";
 
-
 const app: Application = express();
 
 

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import EsewaPaymentScreen from "./EsewaPaymentScreen";
-import { getVillaById } from "@/lib/data/villas";
+import { getVillaById, Villa } from "@/lib/api/villas-api";
 import { createBooking, initiateKhaltiPayment } from "@/lib/api/bookings-api";
 
 type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
@@ -36,12 +36,34 @@ export default function PaymentPage() {
   const [showEsewaScreen, setShowEsewaScreen] = useState(false);
   const [khaltiError, setKhaltiError] = useState<string | null>(null);
 
-  const villa = villaId ? getVillaById(Number(villaId)) : undefined;
+  const [villa, setVilla] = useState<Villa | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  if (!villa) {
+  useEffect(() => {
+    if (!villaId) {
+      setLoadError("Missing villa in booking details");
+      setLoading(false);
+      return;
+    }
+    getVillaById(villaId)
+      .then(setVilla)
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Could not load villa"))
+      .finally(() => setLoading(false));
+  }, [villaId]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "0.95rem", color: "#888" }}>Loading booking details...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !villa) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
-        <p style={{ fontSize: "1.1rem", color: "#aaa", marginBottom: "1rem" }}>Villa not found</p>
+        <p style={{ fontSize: "1.1rem", color: "#aaa", marginBottom: "1rem" }}>{loadError || "Villa not found"}</p>
         <button onClick={() => router.back()} style={{ padding: "10px 24px", background: BRAND_RED, color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
           Go back
         </button>

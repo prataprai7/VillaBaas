@@ -3,192 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { getAllVillas, Villa } from "@/lib/api/villas-api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
-
-const VILLAS = [
-  {
-    id: 1,
-    name: "Methlang Villa",
-    location: "Pokhara, Nepal",
-    address: "Lakeside, Pokhara, Gandaki",
-    price: 17600,
-    rating: 4.6,
-    reviews: 92,
-    guests: 12,
-    rooms: 4,
-    baths: 2,
-    tag: "popular",
-    type: "Lakeside",
-    img: "https://l.icdbcdn.com/oh/bae4bc48-3f95-4610-b83e-0e02eb91110e.jpg",
-    amenities: ["Pool", "Mountain View", "WiFi", "Kitchen"],
-    breakfastIncluded: true,
-    dinnerIncluded: true,
-  },
-  {
-    id: 2,
-    name: "The Hideout Villa",
-    location: "Pokhara, Nepal",
-    address: "Fewa Lakeside, Pokhara, Gandaki",
-    price: 15200,
-    rating: 4.5,
-    reviews: 68,
-    guests: 8,
-    rooms: 4,
-    baths: 2,
-    tag: "immediate",
-    type: "Lakeside",
-    img: "https://villathehideoutpokhara.np-hotel.com/data/Photos/OriginalPhoto/15839/1583906/1583906483/photo-the-hideout-villa-pokhara-pokhara-5.JPEG",
-    amenities: ["WiFi", "Lake View", "Kitchen", "Air Conditioning"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 3,
-    name: "Villa Karma Pokhara",
-    location: "Pokhara, Nepal",
-    address: "Lakeside, Pokhara, Gandaki",
-    price: 14200,
-    rating: 4.5,
-    reviews: 54,
-    guests: 6,
-    rooms: 3,
-    baths: 2,
-    tag: "new",
-    type: "Lakeside",
-    img: "https://a0.muscache.com/im/pictures/miso/Hosting-1135974458065631357/original/b39e7d07-95cf-40fb-828b-5ae4dd376397.jpeg?im_w=1440",
-    amenities: ["WiFi", "Lake View", "Garden", "Parking"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 4,
-    name: "The Pipal Tree",
-    location: "Kathmandu, Nepal",
-    address: "Patan Durbar, Lalitpur, Bagmati",
-    price: 12400,
-    rating: 4.3,
-    reviews: 41,
-    guests: 8,
-    rooms: 3,
-    baths: 2,
-    tag: "new",
-    type: "Heritage",
-    img: "https://media.vrbo.com/lodging/100000000/99800000/99794400/99794388/9ead10f2.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill",
-    amenities: ["WiFi", "Kitchen", "Garden", "Parking"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 5,
-    name: "Villa De Amore",
-    location: "Kathmandu, Nepal",
-    address: "Bhaktapur Durbar, Bagmati",
-    price: 19500,
-    rating: 4.8,
-    reviews: 116,
-    guests: 10,
-    rooms: 4,
-    baths: 3,
-    tag: "immediate",
-    type: "Heritage",
-    img: "https://www.villasnepal.com/storage/802/conversions/01KWTWP3A7QH4BZMQXAXNDW9Y8-hero_avif.webp",
-    amenities: ["Pool", "WiFi", "Kitchen", "Mountain View"],
-    breakfastIncluded: true,
-    dinnerIncluded: false,
-  },
-  {
-    id: 6,
-    name: "Archid Villa",
-    location: "Nagarkot, Nepal",
-    address: "Nagarkot Hill, Bhaktapur, Bagmati",
-    price: 24000,
-    rating: 4.7,
-    reviews: 88,
-    guests: 12,
-    rooms: 5,
-    baths: 3,
-    tag: "popular",
-    type: "Mountain",
-    img: "https://archidvilla.com/wp-content/uploads/2026/05/6.jpeg",
-    amenities: ["WiFi", "Pool", "Kitchen", "Mountain View", "Heating"],
-    breakfastIncluded: true,
-    dinnerIncluded: true,
-  },
-  {
-    id: 7,
-    name: "Farmhouse In Dhulikhel",
-    location: "Kathmandu, Nepal",
-    address: "Dhulikhel, Kathmandu, Kathmandu",
-    price: 9500,
-    rating: 4.9,
-    reviews: 34,
-    guests: 6,
-    rooms: 3,
-    baths: 2,
-    tag: "popular",
-    type: "Mountain",
-    img: "https://www.villasnepal.com/storage/213/conversions/01KCR3VQMHGZC8RC5HFJW17D36-hero_avif.webp",
-    amenities: ["WiFi", "Fireplace", "Heater", "Kitchen"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 8,
-    name: "Bella Vista Thecho",
-    location: "Kathmandu, Nepal",
-    address: "Thecho, Lalitpur, Nepal",
-    price: 11500,
-    rating: 4.6,
-    reviews: 72,
-    guests: 10,
-    rooms: 4,
-    baths: 4,
-    tag: "popular",
-    type: "Jungle",
-    img: "https://www.villasnepal.com/storage/890/conversions/01KXSRPJ7HWBMGA4YRMQGMQF7D-hero_avif.webp",
-    amenities: ["WiFi", "Air Conditioning", "Garden", "Restaurant"],
-    breakfastIncluded: true,
-    dinnerIncluded: true,
-  },
-  {
-    id: 9,
-    name: "Leopard Villa at Tiger Palace by Soaltee",
-    location: "Lumbini, Nepal",
-    address: "Lumbini Peace Zone, Rupandehi",
-    price: 7500,
-    rating: 4.7,
-    reviews: 29,
-    guests: 5,
-    rooms: 2,
-    baths: 2,
-    tag: "immediate",
-    type: "Jungle",
-    img: "https://www.villasnepal.com/storage/330/conversions/01KHWRQJY78ARMKX5KVWWGX712-thumb_avif.webp",
-    amenities: ["WiFi", "Meditation Space", "Bicycles"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 10,
-    name: "Farmhouse In Nagarkot",
-    location: "Nagarkot, Nepal",
-    address: "Nagarkot, Bhaktapur, Province 3",
-    price: 8900,
-    rating: 4.4,
-    reviews: 47,
-    guests: 6,
-    rooms: 3,
-    baths: 2,
-    tag: "new",
-    type: "Jungle",
-    img: "https://www.villasnepal.com/storage/364/conversions/01KK6B9NDV1YBWNYNE92DGEPNS-hero_avif.webp",
-    amenities: ["WiFi", "Garden Terrace", "Tea Tasting", "Kitchen"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-];
 
 const PLACES    = ["All", "Pokhara", "Kathmandu", "Chitwan", "Nagarkot", "Mustang", "Lumbini", "Ilam"];
 const TYPES     = ["All", "Lakeside", "Mountain", "Jungle", "Heritage"];
@@ -208,8 +26,6 @@ const SORT_OPTIONS = [
   { label: "Newest First",       value: "newest" },
 ];
 
-const AMENITIES_FILTER = ["Pool", "WiFi", "Kitchen", "Mountain View", "Lake View", "Garden", "Breakfast Included"];
-
 const NAV_LINKS = [
   { label: "Home",     href: "/dashboard" },
   { label: "Villas",   href: "/dashboard/villas" },
@@ -228,6 +44,10 @@ export default function VillasPage() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
+  const [villas,   setVillas]   = useState<Villa[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [selectedPlace,    setSelectedPlace]    = useState("All");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [searchQuery,      setSearchQuery]      = useState("");
@@ -240,7 +60,7 @@ export default function VillasPage() {
   const [dropdownOpen,     setDropdownOpen]     = useState(false);
   const [placePicker,      setPlacePicker]      = useState(false);
   const [guestPicker,      setGuestPicker]      = useState(false);
-  const [hoveredVilla,     setHoveredVilla]     = useState<number | null>(null);
+  const [hoveredVilla,     setHoveredVilla]     = useState<string | null>(null);
   const [dateRange,        setDateRange]        = useState({ checkIn: "", checkOut: "" });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -248,6 +68,16 @@ export default function VillasPage() {
   const guestRef    = useRef<HTMLDivElement>(null);
 
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
+
+  // Fetch real villas from the API instead of using a static array.
+  // We request a high limit so client-side filtering/sorting still has
+  // the full set to work with, same behavior as before.
+  useEffect(() => {
+    getAllVillas({ limit: 100 })
+      .then(setVillas)
+      .catch(err => setLoadError(err instanceof Error ? err.message : "Could not load villas"))
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -262,7 +92,7 @@ export default function VillasPage() {
 
   const tagMap: Record<number, string> = { 0: "new", 1: "popular", 2: "immediate" };
 
-  const filtered = VILLAS.filter(v => {
+  const filtered = villas.filter(v => {
     const matchSearch   = !searchQuery || v.name.toLowerCase().includes(searchQuery.toLowerCase()) || v.location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchPlace    = selectedPlace === "All" || v.location.toLowerCase().includes(selectedPlace.toLowerCase());
     const matchCategory = selectedCategory === null || v.tag === tagMap[selectedCategory];
@@ -278,7 +108,7 @@ export default function VillasPage() {
     if (sortBy === "price-asc")   return a.price - b.price;
     if (sortBy === "price-desc")  return b.price - a.price;
     if (sortBy === "rating-desc") return b.rating - a.rating;
-    return b.id - a.id;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   const shown = filtered.slice(0, visible);
@@ -293,6 +123,22 @@ export default function VillasPage() {
     setAmenities([]);
     setSortBy("price-asc");
     setDateRange({ checkIn: "", checkOut: "" });
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "1rem", color: "#888" }}>Loading villas...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "1rem", color: "#aaa" }}>{loadError}</p>
+      </div>
+    );
   }
 
   return (
@@ -422,7 +268,6 @@ export default function VillasPage() {
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            {/* Search */}
             <div style={{ flex: "1 1 280px", position: "relative" }}>
               <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}
                 viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={BRAND_RED} strokeWidth="2">
@@ -441,7 +286,6 @@ export default function VillasPage() {
               />
             </div>
 
-            {/* Place picker */}
             <div ref={placeRef} style={{ position: "relative" }}>
               <button onClick={() => setPlacePicker(v => !v)} style={{
                 height: 42, padding: "0 16px", display: "flex", alignItems: "center", gap: 8,
@@ -475,7 +319,6 @@ export default function VillasPage() {
               )}
             </div>
 
-            {/* Date range */}
             <div style={{ display: "flex", gap: 6 }}>
               <div style={{ position: "relative" }}>
                 <svg style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
@@ -507,7 +350,6 @@ export default function VillasPage() {
               />
             </div>
 
-            {/* Guest picker */}
             <div ref={guestRef} style={{ position: "relative" }}>
               <button onClick={() => setGuestPicker(v => !v)} style={{
                 height: 42, padding: "0 16px", display: "flex", alignItems: "center", gap: 8,
@@ -551,7 +393,6 @@ export default function VillasPage() {
             </div>
           </div>
 
-          {/* Category + Type tabs */}
           <div style={{ display: "flex", gap: "1.5rem", marginTop: "1.25rem", borderBottom: "1px solid #f0f0f0", flexWrap: "wrap" }}>
             {CATEGORIES.map((cat, i) => (
               <button key={cat} onClick={() => setSelectedCategory(selectedCategory === i ? null : i)} style={{
@@ -581,7 +422,6 @@ export default function VillasPage() {
       {/* ── MAIN CONTENT ── */}
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "2rem 4vw", display: "flex", gap: "2rem", alignItems: "flex-start" }}>
 
-        {/* ── FILTERS SIDEBAR ── */}
         <aside style={{
           width: 230, flexShrink: 0, position: "sticky", top: 88,
           background: "#fff", borderRadius: 16, padding: "1.25rem", border: "1px solid #e5e5e5",
@@ -623,7 +463,6 @@ export default function VillasPage() {
           ))}
         </aside>
 
-        {/* ── VILLA GRID ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: "center", padding: "4rem 2rem", background: "#fff", borderRadius: 20, border: "1px solid #ebebeb" }}>
@@ -641,21 +480,21 @@ export default function VillasPage() {
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" }}>
               {shown.map(v => (
-                <div key={v.id}
-                  onMouseEnter={() => setHoveredVilla(v.id)}
+                <div key={v._id}
+                  onMouseEnter={() => setHoveredVilla(v._id)}
                   onMouseLeave={() => setHoveredVilla(null)}
                   style={{
                     background: "#fff", borderRadius: 20, overflow: "hidden",
-                    boxShadow: hoveredVilla === v.id ? "0 12px 40px rgba(0,0,0,0.1)" : "0 4px 16px rgba(0,0,0,0.06)",
-                    transform: hoveredVilla === v.id ? "translateY(-4px)" : "translateY(0)",
+                    boxShadow: hoveredVilla === v._id ? "0 12px 40px rgba(0,0,0,0.1)" : "0 4px 16px rgba(0,0,0,0.06)",
+                    transform: hoveredVilla === v._id ? "translateY(-4px)" : "translateY(0)",
                     transition: "all 0.25s", cursor: "pointer",
                   }}
-                  onClick={() => router.push(`/dashboard/villas/${v.id}`)}
+                  onClick={() => router.push(`/dashboard/villas/${v._id}`)}
                 >
                   <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
-                    <img src={v.img} alt={v.name} style={{
+                    <img src={v.img.startsWith("http") ? v.img : `${API_URL}${v.img}`} alt={v.name} style={{
                       width: "100%", height: "100%", objectFit: "cover",
-                      transform: hoveredVilla === v.id ? "scale(1.04)" : "scale(1)",
+                      transform: hoveredVilla === v._id ? "scale(1.04)" : "scale(1)",
                       transition: "transform 0.4s",
                     }} />
                     <span style={{
@@ -701,7 +540,7 @@ export default function VillasPage() {
                         <p style={{ fontSize: "0.68rem", color: "#aaa" }}>per night</p>
                       </div>
                       <button
-                        onClick={e => { e.stopPropagation(); router.push(`/dashboard/villas/${v.id}`); }}
+                        onClick={e => { e.stopPropagation(); router.push(`/dashboard/villas/${v._id}`); }}
                         style={{
                           height: 36, padding: "0 18px", background: BRAND_RED, color: "#fff",
                           border: "none", borderRadius: 10, fontSize: "0.78rem", fontWeight: 600,
@@ -739,7 +578,6 @@ export default function VillasPage() {
         </div>
       </div>
 
-      {/* ── STATS BAND ── */}
       <div style={{ background: BRAND_RED, padding: "3rem 4vw", marginTop: "2rem" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", textAlign: "center" }}>
           {[
@@ -756,7 +594,6 @@ export default function VillasPage() {
         </div>
       </div>
 
-      {/* ── FOOTER ── */}
       <footer style={{ background: "#1C1C1C", color: "rgba(255,255,255,0.5)", padding: "2rem 4vw" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
