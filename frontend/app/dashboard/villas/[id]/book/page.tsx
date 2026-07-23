@@ -4,22 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getTokenCookie } from "@/lib/api/cookies";
+import { getVillaById, Villa } from "@/lib/api/villas-api";
 
 const API_URL   = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 const BRAND_RED = "#DA0B00";
-
-const VILLAS = [
-  { id: 1,  name: "Methlang Villa",         location: "Lakeside, Pokhara, Gandaki",        price: 17600, rating: 4.6, reviews: 92,  rooms: 4, baths: 2, img: "https://l.icdbcdn.com/oh/bae4bc48-3f95-4610-b83e-0e02eb91110e.jpg", breakfastIncluded: true,  dinnerIncluded: true,  houseRules: ["No smoking inside the villa", "Pets are not allowed", "Check-in from 2:00 PM, check-out by 11:00 AM", "Quiet hours between 10 PM and 8 AM"] },
-  { id: 2,  name: "The Hideout Villa",       location: "Fewa Lakeside, Pokhara, Gandaki",   price: 15200, rating: 4.5, reviews: 68,  rooms: 4, baths: 2, img: "https://villathehideoutpokhara.np-hotel.com/data/Photos/OriginalPhoto/15839/1583906/1583906483/photo-the-hideout-villa-pokhara-pokhara-5.JPEG", breakfastIncluded: false, dinnerIncluded: false, houseRules: ["No smoking inside the villa", "Check-in from 3:00 PM, check-out by 12:00 PM"] },
-  { id: 3,  name: "Villa Karma Pokhara",       location: "Lakeside, Pokhara, Gandaki",        price: 14200, rating: 4.5, reviews: 54,  rooms: 3, baths: 2, img: "https://a0.muscache.com/im/pictures/miso/Hosting-1135974458065631357/original/812358b8-798e-4adf-8dd4-7fab045df196.jpeg?im_w=1440", breakfastIncluded: false, dinnerIncluded: false, houseRules: ["No smoking", "Check-in from 2:00 PM"] },
-  { id: 4,  name: "The Pipal Tree",          location: "Patan Durbar, Lalitpur, Bagmati",   price: 12400, rating: 4.3, reviews: 41,  rooms: 3, baths: 2, img: "https://media.vrbo.com/lodging/100000000/99800000/99794400/99794388/9ead10f2.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill", breakfastIncluded: false, dinnerIncluded: false, houseRules: ["No smoking", "Respect local heritage", "Quiet hours after 10 PM"] },
-  { id: 5,  name: "Villa De Amore",          location: "Bhaktapur Durbar, Bagmati",         price: 19500, rating: 4.8, reviews: 116, rooms: 4, baths: 3, img: "https://www.villasnepal.com/storage/802/conversions/01KWTWP3A7QH4BZMQXAXNDW9Y8-hero_avif.webp", breakfastIncluded: true,  dinnerIncluded: false, houseRules: ["No smoking inside", "Pets allowed with prior notice", "Check-in from 2:00 PM"] },
-  { id: 6,  name: "Archid Villa",            location: "Nagarkot Hill, Bhaktapur, Bagmati", price: 24000, rating: 4.7, reviews: 88,  rooms: 5, baths: 3, img: "https://archidvilla.com/wp-content/uploads/2026/05/6.jpeg", breakfastIncluded: true,  dinnerIncluded: true,  houseRules: ["No smoking", "Check-in from 2:00 PM, check-out by 11:00 AM", "Firewood is provided — no outside fires"] },
-  { id: 7,  name: "Farmhouse In Dhulikhel",     location: "Bhaktapur, Kathmandu",        price: 9500,  rating: 4.9, reviews: 34,  rooms: 3, baths: 2, img: "https://www.villasnepal.com/storage/213/conversions/01KCR3VQMHGZC8RC5HFJW17D36-hero_avif.webp", breakfastIncluded: false, dinnerIncluded: false, houseRules: ["Special permit required for Upper Mustang", "No plastic bags inside", "Respect local Buddhist customs"] },
-  { id: 8,  name: "Bella Vista Thecho",    location: "Thecho, Lalitpur, Kathmandu",        price: 11500, rating: 4.6, reviews: 72,  rooms: 4, baths: 4, img: "https://www.villasnepal.com/storage/890/conversions/01KXSRPJ7HWBMGA4YRMQGMQF7D-hero_avif.webp", breakfastIncluded: true,  dinnerIncluded: true,  houseRules: ["No loud noise after 9 PM", "Do not feed animals", "Follow safari guide instructions at all times"] },
-  { id: 9,  name: "Leopard Villa at Tiger Palace by Soaltee",       location: "Lumbini Peace Zone, Rupandehi",     price: 7500,  rating: 4.7, reviews: 29,  rooms: 2, baths: 2, img: "https://www.villasnepal.com/storage/330/conversions/01KHWRQJY78ARMKX5KVWWGX712-thumb_avif.webp", breakfastIncluded: false, dinnerIncluded: false, houseRules: ["Meditation silence observed 6–8 AM", "Vegetarian meals only on premises", "No alcohol"] },
-  { id: 10, name: "Farmhouse In Nagarkot",   location: "Nagarkot, Bhaktapur, Province 3",     price: 8900,  rating: 4.4, reviews: 47,  rooms: 3, baths: 2, img: "https://www.villasnepal.com/storage/364/conversions/01KK6B9NDV1YBWNYNE92DGEPNS-hero_avif.webp", breakfastIncluded: false, dinnerIncluded: false, houseRules: ["No smoking near tea gardens", "Check-in from 2:00 PM", "Hiking boots recommended"] },
-];
 
 const NAV_LINKS = [
   { label: "Home",     href: "/dashboard" },
@@ -42,9 +30,23 @@ export default function BookingConfirmPage() {
   const checkIn  = searchParams.get("checkIn")  || "";
   const checkOut = searchParams.get("checkOut") || "";
   const guests   = Number(searchParams.get("guests") || 1);
-  const villaId  = Number(Array.isArray(params?.id) ? params.id[0] : params?.id);
+  const villaId  = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
 
-  const villa = VILLAS.find(v => v.id === villaId)!;
+  const [villa, setVilla]   = useState<Villa | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!villaId) {
+      setLoadError("Invalid villa id");
+      setLoading(false);
+      return;
+    }
+    getVillaById(villaId)
+      .then(setVilla)
+      .catch(err => setLoadError(err instanceof Error ? err.message : "Could not load villa"))
+      .finally(() => setLoading(false));
+  }, [villaId]);
 
   const nights = checkIn && checkOut
     ? Math.max(0, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000))
@@ -59,7 +61,7 @@ export default function BookingConfirmPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
-  const token     = getTokenCookie(); // read once, used in handleProceed
+  const token     = getTokenCookie();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -75,11 +77,19 @@ export default function BookingConfirmPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  if (!villa) {
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "1rem", color: "#888" }}>Loading...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !villa) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "1.1rem", color: "#aaa", marginBottom: "1rem" }}>Villa not found</p>
+          <p style={{ fontSize: "1.1rem", color: "#aaa", marginBottom: "1rem" }}>{loadError || "Villa not found"}</p>
           <button onClick={() => router.push("/dashboard/villas")} style={{ padding: "10px 24px", background: BRAND_RED, color: "#fff", border: "none", borderRadius: 10, cursor: "pointer" }}>
             ← Back to Villas
           </button>
@@ -87,6 +97,8 @@ export default function BookingConfirmPage() {
       </div>
     );
   }
+
+  const currentVilla = villa;
 
   async function handleProceed() {
     if (!agreed) {
@@ -103,10 +115,10 @@ export default function BookingConfirmPage() {
 
     // When booking API is ready, call it here with the token:
     // try {
-    //   const res = await fetch(`${API_URL}/api/v1/bookings`, {
+    //   const res = await fetch(`${API_URL}/api/v1/auth/bookings`, {
     //     method: "POST",
     //     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    //     body: JSON.stringify({ villaId: villa.id, checkIn, checkOut, guests }),
+    //     body: JSON.stringify({ villaId: currentVilla._id, checkIn, checkOut, guests }),
     //   });
     //   const data = await res.json();
     //   if (!res.ok) throw new Error(data.message);
@@ -120,7 +132,7 @@ export default function BookingConfirmPage() {
     // Mock — navigate to payment page with booking info
     setTimeout(() => {
       setIsLoading(false);
-      router.push(`/dashboard/bookings/payment?villaId=${villa.id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&total=${totalPrice}`);
+      router.push(`/dashboard/bookings/payment?villaId=${currentVilla._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&total=${totalPrice}`);
     }, 800);
   }
 
@@ -141,7 +153,6 @@ export default function BookingConfirmPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#EEEEEE", fontFamily: "'DM Sans', sans-serif", color: "#1C1C1C", margin: 0, padding: 0, paddingBottom: 100 }}>
 
-      {/* ── TOAST ── */}
       {toast && (
         <div style={{
           position: "fixed", top: 20, right: 20, zIndex: 1000,
@@ -155,7 +166,6 @@ export default function BookingConfirmPage() {
         </div>
       )}
 
-      {/* ── NAVBAR ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 300,
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -238,14 +248,13 @@ export default function BookingConfirmPage() {
         </div>
       </nav>
 
-      {/* ── BREADCRUMB ── */}
       <div style={{ background: "#fff", padding: "0.75rem 4vw", borderBottom: "1px solid #f0f0f0" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", alignItems: "center", gap: 8 }}>
           {[
             { label: "Villas",    href: "/dashboard/villas" },
-            { label: villa.name, href: `/dashboard/villas/${villa.id}` },
+            { label: currentVilla.name, href: `/dashboard/villas/${currentVilla._id}` },
             { label: "Confirm Booking", href: "" },
-          ].map((b, i, arr) => (
+          ].map((b, i) => (
             <span key={b.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {i > 0 && <span style={{ color: "#ccc", fontSize: "0.8rem" }}>/</span>}
               {b.href ? (
@@ -261,7 +270,6 @@ export default function BookingConfirmPage() {
         </div>
       </div>
 
-      {/* ── CONTENT ── */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "2rem 4vw" }}>
 
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.8rem", fontWeight: 700, color: "#1C1C1C", marginBottom: "0.4rem" }}>
@@ -271,50 +279,32 @@ export default function BookingConfirmPage() {
           Review your booking details before proceeding to payment.
         </p>
 
-        {/* ── VILLA CARD ── */}
         <div style={card}>
-          <img src={villa.img} alt={villa.name} style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }} />
+          <img src={currentVilla.img.startsWith("http") ? currentVilla.img : `${API_URL}${currentVilla.img}`} alt={currentVilla.name} style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }} />
           <div style={{ padding: "1.25rem" }}>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.3rem", fontWeight: 700, color: "#1C1C1C", marginBottom: 4 }}>{villa.name}</h2>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.3rem", fontWeight: 700, color: "#1C1C1C", marginBottom: 4 }}>{currentVilla.name}</h2>
             <p style={{ fontSize: "0.8rem", color: "#888", display: "flex", alignItems: "center", gap: 4, marginBottom: 8 }}>
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#bbb" strokeWidth="2">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
               </svg>
-              {villa.location}
+              {currentVilla.location}
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
               {[1,2,3,4,5].map(i => (
-                <span key={i} style={{ color: i <= Math.floor(villa.rating) ? "#FFB800" : "#e5e5e5", fontSize: "0.85rem" }}>★</span>
+                <span key={i} style={{ color: i <= Math.floor(currentVilla.rating) ? "#FFB800" : "#e5e5e5", fontSize: "0.85rem" }}>★</span>
               ))}
-              <span style={{ fontSize: "0.75rem", color: "#aaa", marginLeft: 4 }}>{villa.rating} · {villa.reviews} reviews</span>
+              <span style={{ fontSize: "0.75rem", color: "#aaa", marginLeft: 4 }}>{currentVilla.rating} · {currentVilla.reviews} reviews</span>
             </div>
           </div>
         </div>
 
-        {/* ── BOOKING DETAILS ── */}
         <p style={sectionTitle}>Booking Details</p>
         <div style={{ ...card, padding: "1.25rem" }}>
           {[
-            {
-              label: "Check-in",
-              value: checkIn ? fmtDate(checkIn) : "—",
-              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
-            },
-            {
-              label: "Check-out",
-              value: checkOut ? fmtDate(checkOut) : "—",
-              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
-            },
-            {
-              label: "Duration",
-              value: `${nights} night${nights > 1 ? "s" : ""}`,
-              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
-            },
-            {
-              label: "Guests",
-              value: `${guests} guest${guests > 1 ? "s" : ""}`,
-              icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>,
-            },
+            { label: "Check-in",  value: checkIn ? fmtDate(checkIn) : "—", icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
+            { label: "Check-out", value: checkOut ? fmtDate(checkOut) : "—", icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
+            { label: "Duration", value: `${nights} night${nights > 1 ? "s" : ""}`, icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> },
+            { label: "Guests", value: `${guests} guest${guests > 1 ? "s" : ""}`, icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={BRAND_RED} strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
           ].map((row, i, arr) => (
             <div key={row.label}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0" }}>
@@ -331,17 +321,16 @@ export default function BookingConfirmPage() {
           ))}
         </div>
 
-        {/* ── PRICE BREAKDOWN ── */}
         <p style={sectionTitle}>Price Breakdown</p>
         <div style={{ ...card, padding: "1.25rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-            <span style={{ fontSize: "0.88rem", color: "#555" }}>NPR {villa.price.toLocaleString()} × {nights} night{nights > 1 ? "s" : ""}</span>
-            <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#1C1C1C" }}>NPR {(villa.price * nights).toLocaleString()}</span>
+            <span style={{ fontSize: "0.88rem", color: "#555" }}>NPR {currentVilla.price.toLocaleString()} × {nights} night{nights > 1 ? "s" : ""}</span>
+            <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#1C1C1C" }}>NPR {(currentVilla.price * nights).toLocaleString()}</span>
           </div>
-          {(villa.breakfastIncluded || villa.dinnerIncluded) && (
+          {(currentVilla.breakfastIncluded || currentVilla.dinnerIncluded) && (
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
               <span style={{ fontSize: "0.88rem", color: "#555" }}>
-                Meals included — {[villa.breakfastIncluded && "Breakfast", villa.dinnerIncluded && "Dinner"].filter(Boolean).join(" + ")}
+                Meals included — {[currentVilla.breakfastIncluded && "Breakfast", currentVilla.dinnerIncluded && "Dinner"].filter(Boolean).join(" + ")}
               </span>
               <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#16A34A" }}>Included ✓</span>
             </div>
@@ -355,13 +344,12 @@ export default function BookingConfirmPage() {
           </div>
         </div>
 
-        {/* ── HOUSE RULES ── */}
-        {villa.houseRules.length > 0 && (
+        {currentVilla.houseRules.length > 0 && (
           <>
             <p style={sectionTitle}>House Rules</p>
             <div style={{ ...card, padding: "1.25rem" }}>
-              {villa.houseRules.slice(0, 4).map((r, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: i < villa.houseRules.length - 1 ? 10 : 0 }}>
+              {currentVilla.houseRules.slice(0, 4).map((r, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: i < currentVilla.houseRules.length - 1 ? 10 : 0 }}>
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke={BRAND_RED} strokeWidth="2.2" style={{ flexShrink: 0, marginTop: 2 }}>
                     <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                   </svg>
@@ -371,7 +359,6 @@ export default function BookingConfirmPage() {
 
               <div style={{ height: 1, background: "#f0f0f0", margin: "14px 0" }} />
 
-              {/* Agreement checkbox */}
               <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }} onClick={() => setAgreed(v => !v)}>
                 <div style={{
                   width: 22, height: 22, flexShrink: 0, marginTop: 1,
@@ -395,7 +382,6 @@ export default function BookingConfirmPage() {
         )}
       </div>
 
-      {/* ── STICKY BOTTOM CTA ── */}
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
         background: "#fff", padding: "1rem 4vw 1.5rem",

@@ -218,7 +218,7 @@ export default function VillaDetailPage() {
 
       {/* ── HERO IMAGE ── */}
       <div style={{ position: "relative", height: "55vh", minHeight: 380, overflow: "hidden", background: "#111" }}>
-        <img src={allImages[activeImg]} alt={villa.name} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9, transition: "opacity 0.3s" }} />
+        <img src={allImages[activeImg].startsWith("http") ? allImages[activeImg] : `${API_URL}${allImages[activeImg]}`} alt={villa.name} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9, transition: "opacity 0.3s" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 40%, rgba(0,0,0,0.6) 100%)" }} />
 
         <div style={{
@@ -268,7 +268,7 @@ export default function VillaDetailPage() {
                 border: `2px solid ${i === activeImg ? BRAND_RED : "transparent"}`,
                 transition: "border 0.2s",
               }}>
-                <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={img.startsWith("http") ? img : `${API_URL}${img}`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             ))}
           </div>

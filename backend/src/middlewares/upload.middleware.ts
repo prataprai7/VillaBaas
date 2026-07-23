@@ -17,14 +17,19 @@ const storage = multer.diskStorage({
         }
         cb(null, uploadPath);
     },
-    filename: (
-        req: Request,
-        file: Express.Multer.File,
-        cb: (error: Error | null, filename: string) => void
-    ) => {
-        const uniqueSuffix = uuidv4();
-        cb(null, uniqueSuffix + "-" + file.originalname);
-    },
+   filename: (
+    req: Request,
+    file: Express.Multer.File,
+    cb: (error: Error | null, filename: string) => void
+) => {
+    const uniqueSuffix = uuidv4();
+    // Sanitize the original filename: replace anything that isn't
+    // alphanumeric, dot, dash, or underscore with an underscore.
+    // Prevents unicode characters (like macOS screenshot's narrow
+    // no-break space) from corrupting the stored filename.
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    cb(null, uniqueSuffix + "-" + safeName);
+},
 });
 
 const fileFilter = (
