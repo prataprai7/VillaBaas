@@ -1,7 +1,6 @@
 import nodemailer from "nodemailer";
 import { IBooking } from "../models/booking.model";
 
-// ── Transporter ───────────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -10,7 +9,6 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// ── Helper: format date ───────────────────────────────────────────────────────
 function formatDate(date: Date): string {
     const months = [
         "January", "February", "March", "April", "May", "June",
@@ -20,12 +18,10 @@ function formatDate(date: Date): string {
     return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
-// ── Helper: format price ──────────────────────────────────────────────────────
 function formatPrice(amount: number): string {
     return `NPR ${amount.toLocaleString("en-NP")}`;
 }
 
-// ── Booking confirmation email ────────────────────────────────────────────────
 export async function sendBookingConfirmationEmail(
     toEmail: string,
     userName: string,
@@ -193,7 +189,6 @@ export async function sendBookingConfirmationEmail(
     });
 }
 
-// ── Booking cancellation email ─────────────────────────────────────────────────
 export async function sendBookingCancellationEmail(
     toEmail: string,
     userName: string,
