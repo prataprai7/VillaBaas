@@ -2,16 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import EsewaPaymentScreen from "./EsewaPaymentScreen";
 import { getVillaById, Villa, resolveImageUrl } from "@/lib/api/villas-api";
 import { createBooking, initiateKhaltiPayment } from "@/lib/api/bookings-api";
 
-type PaymentMethod = "esewa" | "khalti" | "card" | "cash";
+type PaymentMethod = "khalti" | "cash";
 
 const BRAND_RED = "#DA0B00";
-const ESEWA_GREEN = "#60BB46";
 const KHALTI_PURPLE = "#5C2D91";
-const CARD_BLUE = "#1565C0";
 const CASH_ORANGE = "#C2650A";
 
 function nightsBetween(checkIn: string, checkOut: string): number {
@@ -31,9 +28,8 @@ export default function PaymentPage() {
   const guests = Number(searchParams.get("guests") ?? "1");
   const total = Number(searchParams.get("total") ?? "0");
 
-  const [selected, setSelected] = useState<PaymentMethod>("esewa");
+  const [selected, setSelected] = useState<PaymentMethod>("khalti");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showEsewaScreen, setShowEsewaScreen] = useState(false);
   const [khaltiError, setKhaltiError] = useState<string | null>(null);
 
   const [villa, setVilla] = useState<Villa | null>(null);
@@ -76,11 +72,6 @@ export default function PaymentPage() {
   const totalPrice = `NPR ${total.toLocaleString()}`;
 
   async function handlePay() {
-    if (selected === "esewa") {
-      setShowEsewaScreen(true);
-      return;
-    }
-
     if (selected === "khalti") {
       setKhaltiError(null);
       setIsProcessing(true);
@@ -110,23 +101,12 @@ export default function PaymentPage() {
       return;
     }
 
-    // Card / cash — still simulated for now; migrate to createBooking + a
-    // real payment method once those gateways are wired up too.
+    // Pay at Property — still simulated for now; a real "reserve now, pay
+    // later" flow would call createBooking here too and leave it "unpaid".
     setIsProcessing(true);
     await new Promise((r) => setTimeout(r, 2000));
     setIsProcessing(false);
     router.push("/dashboard/bookings");
-  }
-
-  if (showEsewaScreen) {
-    return (
-      <EsewaPaymentScreen
-        totalPrice={totalPrice}
-        villaName={currentVilla.name}
-        onBack={() => setShowEsewaScreen(false)}
-        onSuccess={() => router.push("/dashboard/bookings")}
-      />
-    );
   }
 
   const card: React.CSSProperties = {
@@ -170,14 +150,6 @@ export default function PaymentPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <PaymentTile
-            selected={selected === "esewa"}
-            onClick={() => setSelected("esewa")}
-            color={ESEWA_GREEN}
-            label="eSewa"
-            subtitle="Pay via eSewa digital wallet"
-            emoji="💚"
-          />
-          <PaymentTile
             selected={selected === "khalti"}
             onClick={() => setSelected("khalti")}
             color={KHALTI_PURPLE}
@@ -186,15 +158,6 @@ export default function PaymentPage() {
             emoji="💜"
             badge="Recommended"
           />
-          <PaymentTile
-            selected={selected === "card"}
-            onClick={() => setSelected("card")}
-            color={CARD_BLUE}
-            label="Credit / Debit Card"
-            subtitle="Visa, Mastercard accepted"
-            emoji="💳"
-          />
-          {selected === "card" && <CardForm />}
           <PaymentTile
             selected={selected === "cash"}
             onClick={() => setSelected("cash")}
@@ -233,7 +196,7 @@ export default function PaymentPage() {
               cursor: isProcessing ? "not-allowed" : "pointer",
               opacity: isProcessing ? 0.7 : 1,
               fontFamily: "'DM Sans', sans-serif",
-              background: selected === "esewa" ? ESEWA_GREEN : selected === "khalti" ? KHALTI_PURPLE : BRAND_RED,
+              background: selected === "khalti" ? KHALTI_PURPLE : BRAND_RED,
             }}
           >
             {isProcessing
@@ -242,11 +205,7 @@ export default function PaymentPage() {
                 : "Processing..."
               : selected === "cash"
               ? "Confirm Booking"
-              : selected === "esewa"
-              ? "Continue with eSewa"
-              : selected === "khalti"
-              ? "Continue with Khalti"
-              : `Pay ${totalPrice}`}
+              : "Continue with Khalti"}
           </button>
         </div>
       </div>
@@ -327,42 +286,5 @@ function PaymentTile({
         )}
       </div>
     </button>
-  );
-}
-
-function CardForm() {
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    marginTop: 6,
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1.5px solid #e5e5e5",
-    fontSize: "0.85rem",
-    fontFamily: "'DM Sans', sans-serif",
-    outline: "none",
-  };
-  const labelStyle: React.CSSProperties = { fontSize: "0.75rem", color: "#888" };
-
-  return (
-    <div style={{ background: "#fff", borderRadius: 14, padding: "1rem", border: "1px solid #e5e5e5", display: "flex", flexDirection: "column", gap: 12 }}>
-      <div>
-        <label style={labelStyle}>Card Number</label>
-        <input placeholder="1234 5678 9012 3456" style={inputStyle} />
-      </div>
-      <div style={{ display: "flex", gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Expiry</label>
-          <input placeholder="MM/YY" style={inputStyle} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <label style={labelStyle}>CVV</label>
-          <input type="password" placeholder="123" style={inputStyle} />
-        </div>
-      </div>
-      <div>
-        <label style={labelStyle}>Cardholder Name</label>
-        <input placeholder="As on card" style={inputStyle} />
-      </div>
-    </div>
   );
 }
