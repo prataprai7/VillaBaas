@@ -51,7 +51,5 @@ node_modules/
 .next/
 .DS_Store
 .env
-
-.env
 .env.*
 backend/.env
