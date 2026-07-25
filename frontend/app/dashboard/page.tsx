@@ -514,53 +514,52 @@ export default function DashboardPage() {
         </div>
 
         {/* ── FEATURED VILLAS (horizontal scroll) ──────────────────────────── */}
-        {featuredVillas.length > 0 && (
-          <div style={{ marginBottom: "2.5rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 700, color: "#1C1C1C" }}>
-                Featured Villas
-              </h3>
-              <span style={{
-                fontSize: "0.72rem", fontWeight: 700, color: BRAND_RED,
-                background: "#FFF0F0", padding: "4px 12px", borderRadius: 20,
-                letterSpacing: "0.04em",
-              }}>✦ Special Offers</span>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.75rem", scrollbarWidth: "none" }}>
-              {featuredVillas.map(v => (
-                <div key={v._id}
-                  onMouseEnter={() => setHoveredFeatured(v._id)}
-                  onMouseLeave={() => setHoveredFeatured(null)}
-                  onClick={() => router.push(`/dashboard/villas/${v._id}`)}
-                  style={{
-                    flexShrink: 0, width: 220, height: 200,
-                    borderRadius: 16, overflow: "hidden", position: "relative", cursor: "pointer",
-                    boxShadow: hoveredFeatured === v._id ? "0 12px 40px rgba(0,0,0,0.18)" : "0 4px 16px rgba(0,0,0,0.08)",
-                    transform: hoveredFeatured === v._id ? "translateY(-4px)" : "translateY(0)",
-                    transition: "all 0.25s",
-                  }}>
-                  <img src={villaImg(v.img)} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover",
-                    transform: hoveredFeatured === v._id ? "scale(1.05)" : "scale(1)", transition: "transform 0.4s" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)" }} />
-                  {/* Rating badge */}
-                  <div style={{
-                    position: "absolute", top: 10, right: 10,
-                    background: "rgba(255,255,255,0.92)", borderRadius: 20,
-                    padding: "3px 8px", display: "flex", alignItems: "center", gap: 3,
-                  }}>
-                    <span style={{ color: "#F59E0B", fontSize: "0.75rem" }}>★</span>
-                    <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#1C1C1C" }}>{v.rating}</span>
-                  </div>
-                  <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, color: "#fff" }}>
-                    <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>{v.location}</p>
-                    <p style={{ fontSize: "0.88rem", fontWeight: 700, marginBottom: 3, lineHeight: 1.2 }}>{v.name}</p>
-                    <p style={{ fontSize: "0.75rem", fontWeight: 600 }}>NPR {v.price.toLocaleString()} / night</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+<div style={{ marginBottom: "2.5rem" }}>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+    <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 700, color: "#1C1C1C" }}>
+      Featured Villas
+    </h3>
+    <span style={{
+      fontSize: "0.72rem", fontWeight: 700, color: BRAND_RED,
+      background: "#FFF0F0", padding: "4px 12px", borderRadius: 20,
+      letterSpacing: "0.04em",
+    }}>✦ Special Offers</span>
+  </div>
+  <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.75rem", scrollbarWidth: "none" }}>
+    {featuredVillas.map(v => (
+      <div key={v._id}
+        onMouseEnter={() => setHoveredFeatured(v._id)}
+        onMouseLeave={() => setHoveredFeatured(null)}
+        onClick={() => router.push(`/dashboard/villas/${v._id}`)}
+        style={{
+          flexShrink: 0, width: 220, height: 200,
+          borderRadius: 16, overflow: "hidden", position: "relative", cursor: "pointer",
+          boxShadow: hoveredFeatured === v._id ? "0 12px 40px rgba(0,0,0,0.18)" : "0 4px 16px rgba(0,0,0,0.08)",
+          transform: hoveredFeatured === v._id ? "translateY(-4px)" : "translateY(0)",
+          transition: "all 0.25s",
+        }}>
+        <img src={villaImg(v.img)} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover",
+          transform: hoveredFeatured === v._id ? "scale(1.05)" : "scale(1)", transition: "transform 0.4s" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)" }} />
+        {/* Rating badge */}
+        <div style={{
+          position: "absolute", top: 10, right: 10,
+          background: "rgba(255,255,255,0.92)", borderRadius: 20,
+          padding: "3px 8px", display: "flex", alignItems: "center", gap: 3,
+        }}>
+          <span style={{ color: "#F59E0B", fontSize: "0.75rem" }}>★</span>
+          <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#1C1C1C" }}>{v.rating}</span>
+        </div>
+        <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, color: "#fff" }}>
+          <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>{v.location}</p>
+          <p style={{ fontSize: "0.88rem", fontWeight: 700, marginBottom: 3, lineHeight: 1.2 }}>{v.name}</p>
+          <p style={{ fontSize: "0.75rem", fontWeight: 600 }}>NPR {v.price.toLocaleString()} / night</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+        
 
         {/* ── VILLA GRID ────────────────────────────────────────────────────── */}
         {loadingVillas ? (
