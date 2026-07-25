@@ -113,7 +113,7 @@ export default function BookingSuccessPage() {
             { label: "Home", href: "/dashboard" },
             { label: "Villas", href: "/dashboard/villas" },
             { label: "Bookings", href: "/dashboard/bookings" },
-            { label: "About", href: "#" },
+            { label: "About", href: "/dashboard/about" },
           ].map((l) => (
             <a key={l.label} href={l.href} style={{ fontSize: "0.88rem", color: "#888", fontWeight: 400, textDecoration: "none", transition: "color 0.2s" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#1C1C1C")}

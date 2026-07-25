@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { label: "Home",     href: "/dashboard" },
   { label: "Villas",   href: "/dashboard/villas" },
   { label: "Bookings", href: "/dashboard/bookings" },
-  { label: "About",    href: "#" },
+  { label: "About",    href: "/dashboard/about" },
 ];
 
 export default function VillaDetailPage() {
