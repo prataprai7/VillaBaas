@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Modal from "./Modal";
 import { handleDeleteVilla } from "@/lib/actions/admin/villa-action";
+import { resolveImageUrl } from "@/lib/api/villas-api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 
@@ -118,7 +119,7 @@ export default function VillaTable({
                                 >
                                     <td style={{ padding: "14px 16px", color: "#1a1a1a", fontWeight: 500 }}>
                                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                            <img src={`${API_URL}${v.img}`} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} />
+                                            <img src={resolveImageUrl(v.img)} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover" }} />
                                             {v.name}
                                         </div>
                                     </td>

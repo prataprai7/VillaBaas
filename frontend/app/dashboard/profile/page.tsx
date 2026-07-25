@@ -236,7 +236,7 @@ export default function ProfilePage() {
         {/* Header card */}
         <div className="card" style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: "1.25rem", animation: "fadeIn 0.3s ease both" }}>
           <div className="avatar-wrap">
-            {imageFile && imagePreview
+            {imagePreview
               ? <img src={imagePreview} alt="avatar" className="avatar-img" />
               : (
                 <div className="avatar-initials" style={{ fontSize: "1.7rem" }}>
