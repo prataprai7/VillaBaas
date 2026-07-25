@@ -10,6 +10,7 @@ import khaltiRoutes from "./routes/khalti.route";
 import adminVillaRoutes from "./routes/villa.route";
 import publicVillaRoutes from "./routes/public-villa.route";
 import assistantRoutes from "./routes/assistant.route";
+import bookingRoutes from "./routes/booking.route";
 
 const app: Application = express();
 
@@ -51,6 +52,7 @@ app.use(morgan("combined"));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/v1/auth",            userRoutes);
+app.use("/api/v1/auth/bookings",   bookingRoutes);
 app.use("/api/v1/admin/users",     adminUserRoutes);
 app.use("/api/v1/payments/khalti", khaltiRoutes);
 app.use("/api/v1/admin/villas",    adminVillaRoutes);
