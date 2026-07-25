@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
 
 export interface ExtractedFilters {
   location: string | null;
@@ -12,11 +12,28 @@ export interface ExtractedFilters {
   isGeneralQuestion: boolean;
 }
 
+const FALLBACK_FILTERS: ExtractedFilters = {
+  location: null,
+  minPrice: null,
+  maxPrice: null,
+  guests: null,
+  type: null,
+  isGeneralQuestion: true,
+};
+
+// Friendly static reply used when Gemini is unavailable (quota, network, etc.)
+const ASSISTANT_UNAVAILABLE_MESSAGE =
+  "Our AI assistant is temporarily unavailable right now. You can still browse and filter villas directly on the Villas page in the meantime — sorry for the hassle!";
+
 /**
  * Turns a natural-language message into structured search filters.
  * isGeneralQuestion=true means the message isn't a villa search at all
  * (e.g. "how do I cancel a booking") — the caller should skip villa
  * filtering entirely and just let Gemini answer conversationally.
+ *
+ * If the Gemini API call itself fails (quota, network, etc.), we fall
+ * back to isGeneralQuestion=true so the caller can still respond instead
+ * of throwing a 500/429 up to the frontend.
  */
 export async function extractFilters(message: string): Promise<ExtractedFilters> {
   const prompt = `You are a filter-extraction engine for a Nepal villa booking site called VillaBaas.
@@ -36,8 +53,14 @@ User message: "${message}"
 
 Respond with ONLY the JSON object.`;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text().trim();
+  let text: string;
+  try {
+    const result = await model.generateContent(prompt);
+    text = result.response.text().trim();
+  } catch (err) {
+    console.error("Gemini extractFilters call failed, falling back:", err);
+    return FALLBACK_FILTERS;
+  }
 
   try {
     // Strip markdown code fences if Gemini adds them despite instructions
@@ -45,7 +68,7 @@ Respond with ONLY the JSON object.`;
     return JSON.parse(cleaned) as ExtractedFilters;
   } catch {
     // Fall back to treating it as a general question if parsing fails
-    return { location: null, minPrice: null, maxPrice: null, guests: null, type: null, isGeneralQuestion: true };
+    return FALLBACK_FILTERS;
   }
 }
 
@@ -62,6 +85,10 @@ export interface VillaSummary {
  * Generates a natural reply. When matchedVillas is provided, Gemini is
  * instructed to reference ONLY those villas by name — never invent ones
  * that aren't in the list, since this is grounded in real DB results.
+ *
+ * If the Gemini API call fails (quota, network, etc.), returns a static
+ * friendly fallback message instead of throwing, so the chat endpoint
+ * degrades gracefully rather than 500/429-ing.
  */
 export async function generateReply(
   userMessage: string,
@@ -93,6 +120,11 @@ ${villaList}
 Write a brief, warm reply (2-3 sentences) introducing these results conversationally. Do not repeat the full price/location details since they'll be shown as cards below your message — just give a friendly intro sentence or two.`;
   }
 
-  const result = await model.generateContent(prompt);
-  return result.response.text().trim();
+  try {
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  } catch (err) {
+    console.error("Gemini generateReply call failed, falling back:", err);
+    return ASSISTANT_UNAVAILABLE_MESSAGE;
+  }
 }
