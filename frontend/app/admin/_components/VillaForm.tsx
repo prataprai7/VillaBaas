@@ -49,7 +49,7 @@ const err: React.CSSProperties = {
 
 export default function VillaForm() {
     const router = useRouter();
-    const [isPending, startTransition] = useTransition();
+    const [isPending, setIsPending] = useState(false);
     const [form, setForm] = useState<CreateInput>({
         name: "", location: "", address: "", price: 0,
         guests: 1, rooms: 1, baths: 1, tag: "new", type: "",
@@ -80,63 +80,69 @@ export default function VillaForm() {
         setAdditionalFiles(Array.from(e.target.files || []));
     }
 
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        setGlobalError("");
+    async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setGlobalError("");
 
-        const parsed = CreateSchema.safeParse(form);
-        if (!parsed.success) {
-            const errors: FieldErrors = {};
-            parsed.error.issues.forEach(i => {
-                const f = i.path[0] as keyof FieldErrors;
-                if (!errors[f]) errors[f] = i.message;
-            });
-            setFieldErrors(errors);
-            return;
-        }
-
-        if (!imgFile) {
-            setGlobalError("A main villa image is required");
-            return;
-        }
-
-        startTransition(async () => {
-            const fd = new FormData();
-            fd.append("name", parsed.data.name);
-            fd.append("location", parsed.data.location);
-            fd.append("address", parsed.data.address);
-            fd.append("price", String(parsed.data.price));
-            fd.append("guests", String(parsed.data.guests));
-            fd.append("rooms", String(parsed.data.rooms));
-            fd.append("baths", String(parsed.data.baths));
-            fd.append("tag", parsed.data.tag);
-            fd.append("type", parsed.data.type);
-            fd.append("description", parsed.data.description);
-            fd.append("breakfastIncluded", String(parsed.data.breakfastIncluded));
-            fd.append("dinnerIncluded", String(parsed.data.dinnerIncluded));
-
-            // Split comma-separated text into individual array items,
-            // matching what Zod's z.array(z.string()) expects on the backend.
-            (parsed.data.amenities || "")
-                .split(",").map(s => s.trim()).filter(Boolean)
-                .forEach(a => fd.append("amenities", a));
-
-            (parsed.data.houseRules || "")
-                .split(",").map(s => s.trim()).filter(Boolean)
-                .forEach(r => fd.append("houseRules", r));
-
-            fd.append("img", imgFile);
-            additionalFiles.forEach(f => fd.append("additionalImages", f));
-
-            const result = await handleCreateVilla(fd);
-            if (!result.success) {
-                setGlobalError(result.message || "Failed to create villa");
-                return;
-            }
-            router.push("/admin/villas");
-            router.refresh();
+    const parsed = CreateSchema.safeParse(form);
+    if (!parsed.success) {
+        const errors: FieldErrors = {};
+        parsed.error.issues.forEach(i => {
+            const f = i.path[0] as keyof FieldErrors;
+            if (!errors[f]) errors[f] = i.message;
         });
+        setFieldErrors(errors);
+        return;
     }
+
+    if (!imgFile) {
+        setGlobalError("A main villa image is required");
+        return;
+    }
+
+    setIsPending(true);
+
+    const fd = new FormData();
+    fd.append("name", parsed.data.name);
+    fd.append("location", parsed.data.location);
+    fd.append("address", parsed.data.address);
+    fd.append("price", String(parsed.data.price));
+    fd.append("guests", String(parsed.data.guests));
+    fd.append("rooms", String(parsed.data.rooms));
+    fd.append("baths", String(parsed.data.baths));
+    fd.append("tag", parsed.data.tag);
+    fd.append("type", parsed.data.type);
+    fd.append("description", parsed.data.description);
+    fd.append("breakfastIncluded", String(parsed.data.breakfastIncluded));
+    fd.append("dinnerIncluded", String(parsed.data.dinnerIncluded));
+
+    (parsed.data.amenities || "")
+        .split(",").map(s => s.trim()).filter(Boolean)
+        .forEach(a => fd.append("amenities", a));
+
+    (parsed.data.houseRules || "")
+        .split(",").map(s => s.trim()).filter(Boolean)
+        .forEach(r => fd.append("houseRules", r));
+
+    fd.append("img", imgFile);
+    additionalFiles.forEach(f => fd.append("additionalImages", f));
+
+    try {
+        const result = await handleCreateVilla(fd);
+        if (!result.success) {
+            setGlobalError(result.message || "Failed to create villa");
+            setIsPending(false);
+            return;
+        }
+        router.refresh();
+        router.push("/admin/villas");
+        // Deliberately NOT resetting isPending here — this component is about
+        // to unmount as the new route takes over, so there's no stuck state.
+    } catch (err: any) {
+        setGlobalError(err.message || "Something went wrong");
+        setIsPending(false);
+    }
+}
 
     return (
         <div style={{ maxWidth: 600 }}>
