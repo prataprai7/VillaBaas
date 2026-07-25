@@ -147,7 +147,7 @@ export default function VillasPage() {
 
       {/* ── NAVBAR ── */}
       <nav style={{
-        position: "sticky", top: 0, zIndex: 300,
+        position: "fixed", top: 0,left:0, right:0, zIndex: 300,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0.9rem 4vw",
         background: "rgba(255,255,255,0.97)",
@@ -242,6 +242,8 @@ export default function VillasPage() {
           )}
         </div>
       </nav>
+
+       <div style={{ height: 70 }} />
 
       {/* ── SEARCH + FILTER BAR ── */}
       <div style={{ background: "#fff", padding: "1.5rem 4vw 1rem", borderBottom: "1px solid #ebebeb" }}>

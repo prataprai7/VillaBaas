@@ -6,168 +6,28 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8089";
 
-const VILLAS = [
-  {
-    id: 1,
-    name: "Methlang Villa",
-    location: "Pokhara, Nepal",
-    price: 17600,
-    rating: 4.6,
-    reviews: 92,
-    guests: 12,
-    rooms: 4,
-    baths: 2,
-    tag: "popular",
-    img: "https://l.icdbcdn.com/oh/bae4bc48-3f95-4610-b83e-0e02eb91110e.jpg",
-    amenities: ["Pool", "Mountain View", "WiFi", "Kitchen"],
-    breakfastIncluded: true,
-    dinnerIncluded: true,
-  },
-  {
-    id: 2,
-    name: "The Hideout Villa",
-    location: "Pokhara, Nepal",
-    price: 15200,
-    rating: 4.5,
-    reviews: 68,
-    guests: 8,
-    rooms: 4,
-    baths: 2,
-    tag: "immediate",
-    img: "https://villathehideoutpokhara.np-hotel.com/data/Photos/OriginalPhoto/15839/1583906/1583906483/photo-the-hideout-villa-pokhara-pokhara-5.JPEG",
-    amenities: ["WiFi", "Lake View", "Kitchen", "Air Conditioning"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 3,
-    name: "Villa Karma Pokhara",
-    location: "Pokhara, Nepal",
-    price: 14200,
-    rating: 4.5,
-    reviews: 54,
-    guests: 6,
-    rooms: 3,
-    baths: 2,
-    tag: "new",
-    img: "https://a0.muscache.com/im/pictures/miso/Hosting-1135974458065631357/original/b39e7d07-95cf-40fb-828b-5ae4dd376397.jpeg?im_w=1440",
-    amenities: ["WiFi", "Lake View", "Garden", "Parking"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 4,
-    name: "The Pipal Tree",
-    location: "Kathmandu, Nepal",
-    price: 12400,
-    rating: 4.3,
-    reviews: 41,
-    guests: 8,
-    rooms: 3,
-    baths: 2,
-    tag: "new",
-    img: "https://media.vrbo.com/lodging/100000000/99800000/99794400/99794388/9ead10f2.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill",
-    amenities: ["WiFi", "Kitchen", "Garden", "Parking"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 5,
-    name: "Villa De Amore",
-    location: "Kathmandu, Nepal",
-    price: 19500,
-    rating: 4.8,
-    reviews: 116,
-    guests: 10,
-    rooms: 4,
-    baths: 3,
-    tag: "immediate",
-    img: "https://www.villasnepal.com/storage/802/conversions/01KWTWP3A7QH4BZMQXAXNDW9Y8-hero_avif.webp",
-    amenities: ["Pool", "WiFi", "Kitchen", "Mountain View"],
-    breakfastIncluded: true,
-    dinnerIncluded: false,
-  },
-  {
-    id: 6,
-    name: "Archid Villa",
-    location: "Nagarkot, Nepal",
-    price: 24000,
-    rating: 4.7,
-    reviews: 88,
-    guests: 12,
-    rooms: 5,
-    baths: 3,
-    tag: "popular",
-    img: "https://archidvilla.com/wp-content/uploads/2026/05/6.jpeg",
-    amenities: ["WiFi", "Pool", "Kitchen", "Mountain View", "Heating"],
-    breakfastIncluded: true,
-    dinnerIncluded: true,
-  },
-  {
-    id: 7,
-    name: "Farmhouse In Dhulikhel",
-    location: "Kathmandu, Nepal",
-    price: 9500,
-    rating: 4.9,
-    reviews: 34,
-    guests: 6,
-    rooms: 3,
-    baths: 2,
-    tag: "popular",
-    img: "https://www.villasnepal.com/storage/213/conversions/01KCR3VQMHGZC8RC5HFJW17D36-hero_avif.webp",
-    amenities: ["WiFi", "Fireplace", "Heater", "Kitchen"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 8,
-    name: "Bella Vista Thecho",
-    location: "Kathmandu, Nepal",
-    price: 11500,
-    rating: 4.6,
-    reviews: 72,
-    guests: 10,
-    rooms: 4,
-    baths: 4,
-    tag: "popular",
-    img: "https://www.villasnepal.com/storage/890/conversions/01KXSRPJ7HWBMGA4YRMQGMQF7D-hero_avif.webp",
-    amenities: ["WiFi", "Air Conditioning", "Garden", "Restaurant"],
-    breakfastIncluded: true,
-    dinnerIncluded: true,
-  },
-  {
-    id: 9,
-    name: "Leopard Villa at Tiger Palace by Soaltee",
-    location: "Lumbini, Nepal",
-    price: 7500,
-    rating: 4.7,
-    reviews: 29,
-    guests: 5,
-    rooms: 2,
-    baths: 2,
-    tag: "immediate",
-    img: "https://www.villasnepal.com/storage/330/conversions/01KHWRQJY78ARMKX5KVWWGX712-thumb_avif.webp",
-    amenities: ["WiFi", "Meditation Space", "Bicycles"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-  {
-    id: 10,
-    name: "Farmhouse In Nagarkot",
-    location: "Nagarkot, Nepal",
-    price: 8900,
-    rating: 4.4,
-    reviews: 47,
-    guests: 6,
-    rooms: 3,
-    baths: 2,
-    tag: "new",
-    img: "https://www.villasnepal.com/storage/364/conversions/01KK6B9NDV1YBWNYNE92DGEPNS-hero_avif.webp",
-    amenities: ["WiFi", "Garden Terrace", "Tea Tasting", "Kitchen"],
-    breakfastIncluded: false,
-    dinnerIncluded: false,
-  },
-];
+interface Villa {
+  _id: string;
+  name: string;
+  location: string;
+  address: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  guests: number;
+  rooms: number;
+  baths: number;
+  tag: "popular" | "new" | "immediate";
+  type: string;
+  img: string;
+  additionalImages: string[];
+  amenities: string[];
+  breakfastIncluded: boolean;
+  dinnerIncluded: boolean;
+  description: string;
+  houseRules: string[];
+  isActive: boolean;
+}
 
 const PLACES = ["All", "Pokhara", "Kathmandu", "Chitwan", "Nagarkot", "Mustang", "Lumbini", "Ilam"];
 const CATEGORIES = ["New", "Popular", "Immediate"];
@@ -184,6 +44,10 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
+  const [villas, setVillas]                   = useState<Villa[]>([]);
+  const [loadingVillas, setLoadingVillas]      = useState(true);
+  const [villasError, setVillasError]          = useState<string | null>(null);
+
   const [selectedPlace, setSelectedPlace]     = useState("All");
   const [selectedCategory, setSelectedCategory] = useState(1); // Popular
   const [searchQuery, setSearchQuery]         = useState("");
@@ -192,14 +56,36 @@ export default function DashboardPage() {
   const [dropdownOpen, setDropdownOpen]       = useState(false);
   const [placePicker, setPlacePicker]         = useState(false);
   const [guestPicker, setGuestPicker]         = useState(false);
-  const [hoveredVilla, setHoveredVilla]       = useState<number | null>(null);
-  const [hoveredFeatured, setHoveredFeatured] = useState<number | null>(null);
+  const [hoveredVilla, setHoveredVilla]       = useState<string | null>(null);
+  const [hoveredFeatured, setHoveredFeatured] = useState<string | null>(null);
 
   const dropdownRef  = useRef<HTMLDivElement>(null);
   const placeRef     = useRef<HTMLDivElement>(null);
   const guestRef     = useRef<HTMLDivElement>(null);
 
   const avatarSrc = user?.profileImage ? `${API_URL}${user.profileImage}` : null;
+  const villaImg = (path: string) => path.startsWith("http") ? path : `${API_URL}${path}`;
+
+  // ── Fetch villas from the real API ────────────────────────────────────
+  useEffect(() => {
+    async function fetchVillas() {
+      try {
+        setLoadingVillas(true);
+        setVillasError(null);
+        const res = await fetch(`${API_URL}/api/v1/villas?limit=100`);
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message || "Failed to load villas");
+        setVillas((json.data as Villa[]).filter(v => v.isActive));
+      } catch (err) {
+        console.error("Failed to fetch villas:", err);
+        setVillasError("Could not load villas. Please try again.");
+      } finally {
+        setLoadingVillas(false);
+      }
+    }
+    fetchVillas();
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -213,7 +99,7 @@ export default function DashboardPage() {
   }, []);
 
   const tagMap: Record<number, string> = { 0: "new", 1: "popular", 2: "immediate" };
-  const filteredVillas = VILLAS.filter(v => {
+  const filteredVillas = villas.filter(v => {
     const matchCategory = v.tag === tagMap[selectedCategory];
     const matchPlace    = selectedPlace === "All" || v.location.toLowerCase().includes(selectedPlace.toLowerCase());
     const matchSearch   = !searchQuery || v.name.toLowerCase().includes(searchQuery.toLowerCase()) || v.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -221,7 +107,7 @@ export default function DashboardPage() {
     return matchCategory && matchPlace && matchSearch && matchGuests;
   });
 
-  const featuredVillas = VILLAS.filter(v => v.rating >= 4.5);
+  const featuredVillas = villas.filter(v => v.rating >= 4.5);
 
   function resetFilters() {
     setSelectedPlace("Pokhara");
@@ -247,7 +133,7 @@ export default function DashboardPage() {
 
       {/* ── NAVBAR ─────────────────────────────────────────────────────────── */}
       <nav style={{
-        position: "sticky", top: 0, zIndex: 300,
+        position: "fixed", top: 0,left:0, right: 0, zIndex: 300,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0.9rem 4vw",
         background: "rgba(255,255,255,0.97)",
@@ -360,6 +246,7 @@ export default function DashboardPage() {
           )}
         </div>
       </nav>
+       <div style={{ height: 70 }} />
 
       {/* ── HERO SECTION ─────────────────────────────────────────────────────── */}
       <div style={{ position: "relative", height: "92vh", minHeight: 560, overflow: "hidden" }}>
@@ -405,42 +292,7 @@ export default function DashboardPage() {
             Handpicked luxury villas nestled in the Himalayas, lakesides,<br />and jungles of Nepal. Start your journey today.
           </p>
 
-          {/* Search bar */}
-          <div style={{
-            display: "flex", background: "#fff", borderRadius: 14,
-            overflow: "hidden", boxShadow: "0 16px 60px rgba(0,0,0,0.35)",
-            maxWidth: 720, margin: "0 auto",
-          }}>
-            {[
-              { label: "Destination", placeholder: "Pokhara", flex: "1 1 180px" },
-              { label: "Check In",    placeholder: "Check in date", flex: "1 1 130px" },
-              { label: "Check Out",   placeholder: "Check out date", flex: "1 1 130px" },
-            ].map((field) => (
-              <div key={field.label} style={{ flex: field.flex, padding: "16px 20px", borderRight: "1px solid #f0f0f0" }}>
-                <div style={{ fontSize: "0.6rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>
-                  {field.label}
-                </div>
-                <input placeholder={field.placeholder} style={{ border: "none", outline: "none", fontSize: "0.9rem", color: "#1a1a1a", width: "100%", background: "transparent", fontFamily: "'DM Sans', sans-serif" }} />
-              </div>
-            ))}
-            <div style={{ flex: "0 0 80px", padding: "16px 18px", borderRight: "1px solid #f0f0f0" }}>
-              <div style={{ fontSize: "0.6rem", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>Guests</div>
-              <input type="number" defaultValue={2} min={1} style={{ border: "none", outline: "none", fontSize: "0.9rem", color: "#1a1a1a", width: "100%", background: "transparent", fontFamily: "'DM Sans', sans-serif" }} />
-            </div>
-            <button style={{
-              flex: "0 0 auto",
-              background: BRAND_RED,
-              color: "#fff", border: "none", padding: "0 28px",
-              fontSize: "0.88rem", cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
-              display: "flex", alignItems: "center", gap: 8, letterSpacing: "0.02em",
-            }}>
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-              </svg>
-              Search
-            </button>
-          </div>
+          
 
           <div style={{ display: "flex", justifyContent: "center", gap: "2rem", marginTop: "2rem" }}>
             {["500+ Villas", "Instant Booking", "24/7 Support"].map(b => (
@@ -662,53 +514,69 @@ export default function DashboardPage() {
         </div>
 
         {/* ── FEATURED VILLAS (horizontal scroll) ──────────────────────────── */}
-        <div style={{ marginBottom: "2.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 700, color: "#1C1C1C" }}>
-              Featured Villas
-            </h3>
-            <span style={{
-              fontSize: "0.72rem", fontWeight: 700, color: BRAND_RED,
-              background: "#FFF0F0", padding: "4px 12px", borderRadius: 20,
-              letterSpacing: "0.04em",
-            }}>✦ Special Offers</span>
-          </div>
-          <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.75rem", scrollbarWidth: "none" }}>
-            {featuredVillas.map(v => (
-              <div key={v.id}
-                onMouseEnter={() => setHoveredFeatured(v.id)}
-                onMouseLeave={() => setHoveredFeatured(null)}
-                style={{
-                  flexShrink: 0, width: 220, height: 200,
-                  borderRadius: 16, overflow: "hidden", position: "relative", cursor: "pointer",
-                  boxShadow: hoveredFeatured === v.id ? "0 12px 40px rgba(0,0,0,0.18)" : "0 4px 16px rgba(0,0,0,0.08)",
-                  transform: hoveredFeatured === v.id ? "translateY(-4px)" : "translateY(0)",
-                  transition: "all 0.25s",
-                }}>
-                <img src={v.img} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover",
-                  transform: hoveredFeatured === v.id ? "scale(1.05)" : "scale(1)", transition: "transform 0.4s" }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)" }} />
-                {/* Rating badge */}
-                <div style={{
-                  position: "absolute", top: 10, right: 10,
-                  background: "rgba(255,255,255,0.92)", borderRadius: 20,
-                  padding: "3px 8px", display: "flex", alignItems: "center", gap: 3,
-                }}>
-                  <span style={{ color: "#F59E0B", fontSize: "0.75rem" }}>★</span>
-                  <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#1C1C1C" }}>{v.rating}</span>
+        {featuredVillas.length > 0 && (
+          <div style={{ marginBottom: "2.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 700, color: "#1C1C1C" }}>
+                Featured Villas
+              </h3>
+              <span style={{
+                fontSize: "0.72rem", fontWeight: 700, color: BRAND_RED,
+                background: "#FFF0F0", padding: "4px 12px", borderRadius: 20,
+                letterSpacing: "0.04em",
+              }}>✦ Special Offers</span>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.75rem", scrollbarWidth: "none" }}>
+              {featuredVillas.map(v => (
+                <div key={v._id}
+                  onMouseEnter={() => setHoveredFeatured(v._id)}
+                  onMouseLeave={() => setHoveredFeatured(null)}
+                  onClick={() => router.push(`/dashboard/villas/${v._id}`)}
+                  style={{
+                    flexShrink: 0, width: 220, height: 200,
+                    borderRadius: 16, overflow: "hidden", position: "relative", cursor: "pointer",
+                    boxShadow: hoveredFeatured === v._id ? "0 12px 40px rgba(0,0,0,0.18)" : "0 4px 16px rgba(0,0,0,0.08)",
+                    transform: hoveredFeatured === v._id ? "translateY(-4px)" : "translateY(0)",
+                    transition: "all 0.25s",
+                  }}>
+                  <img src={villaImg(v.img)} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover",
+                    transform: hoveredFeatured === v._id ? "scale(1.05)" : "scale(1)", transition: "transform 0.4s" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)" }} />
+                  {/* Rating badge */}
+                  <div style={{
+                    position: "absolute", top: 10, right: 10,
+                    background: "rgba(255,255,255,0.92)", borderRadius: 20,
+                    padding: "3px 8px", display: "flex", alignItems: "center", gap: 3,
+                  }}>
+                    <span style={{ color: "#F59E0B", fontSize: "0.75rem" }}>★</span>
+                    <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#1C1C1C" }}>{v.rating}</span>
+                  </div>
+                  <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, color: "#fff" }}>
+                    <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>{v.location}</p>
+                    <p style={{ fontSize: "0.88rem", fontWeight: 700, marginBottom: 3, lineHeight: 1.2 }}>{v.name}</p>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 600 }}>NPR {v.price.toLocaleString()} / night</p>
+                  </div>
                 </div>
-                <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, color: "#fff" }}>
-                  <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>{v.location}</p>
-                  <p style={{ fontSize: "0.88rem", fontWeight: 700, marginBottom: 3, lineHeight: 1.2 }}>{v.name}</p>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 600 }}>NPR {v.price.toLocaleString()} / night</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── VILLA GRID ────────────────────────────────────────────────────── */}
-        {filteredVillas.length === 0 ? (
+        {loadingVillas ? (
+          <div style={{ textAlign: "center", padding: "4rem 2rem", background: "#fff", borderRadius: 20, border: "1px solid #ebebeb" }}>
+            <p style={{ color: "#888", fontSize: "0.9rem" }}>Loading villas...</p>
+          </div>
+        ) : villasError ? (
+          <div style={{ textAlign: "center", padding: "4rem 2rem", background: "#fff", borderRadius: 20, border: "1px solid #ebebeb" }}>
+            <p style={{ color: BRAND_RED, fontSize: "0.9rem", marginBottom: "1.25rem" }}>{villasError}</p>
+            <button onClick={() => window.location.reload()} style={{
+              padding: "10px 24px", background: BRAND_RED, color: "#fff",
+              border: "none", borderRadius: 10, fontSize: "0.84rem",
+              fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+            }}>Try Again</button>
+          </div>
+        ) : filteredVillas.length === 0 ? (
           <div style={{ textAlign: "center", padding: "4rem 2rem", background: "#fff", borderRadius: 20, border: "1px solid #ebebeb" }}>
             <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ccc" strokeWidth="1.5" style={{ marginBottom: "1rem" }}>
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6M11 8v6" transform="rotate(45 11 11)"/>
@@ -724,22 +592,21 @@ export default function DashboardPage() {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" }}>
             {filteredVillas.map(v => (
-              <div key={v.id}
-                onMouseEnter={() => setHoveredVilla(v.id)}
+              <div key={v._id}
+                onMouseEnter={() => setHoveredVilla(v._id)}
                 onMouseLeave={() => setHoveredVilla(null)}
                 style={{
                   background: "#fff", borderRadius: 20, overflow: "hidden",
-                  boxShadow: hoveredVilla === v.id ? "0 12px 40px rgba(0,0,0,0.1)" : "0 4px 16px rgba(0,0,0,0.06)",
-                  transform: hoveredVilla === v.id ? "translateY(-4px)" : "translateY(0)",
+                  boxShadow: hoveredVilla === v._id ? "0 12px 40px rgba(0,0,0,0.1)" : "0 4px 16px rgba(0,0,0,0.06)",
+                  transform: hoveredVilla === v._id ? "translateY(-4px)" : "translateY(0)",
                   transition: "all 0.25s", cursor: "pointer",
                 }}
-                onClick={() => router.push(`/dashboard/villas/${v.id}`)}
+                onClick={() => router.push(`/dashboard/villas/${v._id}`)}
               >
                 {/* Image */}
                 <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
-                  <img src={v.img} alt={v.name} style={{
-                    width: "100%", height: "100%", objectFit: "cover",
-                    transform: hoveredVilla === v.id ? "scale(1.04)" : "scale(1)",
+                  <img src={villaImg(v.img)} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover",
+                    transform: hoveredVilla === v._id ? "scale(1.04)" : "scale(1)",
                     transition: "transform 0.4s",
                   }} />
                   {/* Tag badge */}
@@ -793,7 +660,7 @@ export default function DashboardPage() {
                       <p style={{ fontSize: "0.68rem", color: "#aaa" }}>per night</p>
                     </div>
                     <button
-                      onClick={e => { e.stopPropagation(); router.push(`/dashboard/villas/${v.id}`); }}
+                      onClick={e => { e.stopPropagation(); router.push(`/dashboard/villas/${v._id}`); }}
                       style={{
                         height: 36, padding: "0 18px",
                         background: BRAND_RED, color: "#fff",
