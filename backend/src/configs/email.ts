@@ -1,32 +1,23 @@
-import nodemailer from "nodemailer";
-import type SMTPTransport from "nodemailer/lib/smtp-transport";
+import { Resend } from "resend";
 
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-if (!EMAIL_USER || !EMAIL_PASS) {
-    console.warn("EMAIL_USER or EMAIL_PASS not set — password reset emails will fail to send.");
+if (!RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not set — emails will fail to send.");
 }
 
-const transportOptions = {
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // STARTTLS on 587, not implicit TLS
-    auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS,
-    },
-    family: 4, // force IPv4 — Render/many cloud hosts don't support outbound IPv6
-    connectionTimeout: 10000, // fail faster if genuinely blocked, easier to diagnose
-};
+export const resend = new Resend(RESEND_API_KEY);
 
-export const transporter = nodemailer.createTransport(transportOptions as SMTPTransport.Options);
+// Resend's test sender only works if you haven't verified your own domain yet.
+// Once you verify a domain in the Resend dashboard, change this to
+// something like "VillaBaas <noreply@yourdomain.com>".
+const FROM_ADDRESS = "VillaBaas <onboarding@resend.dev>";
 
 const BRAND_RED = "#DA0B00";
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string, firstName?: string) {
-    await transporter.sendMail({
-        from: `"VillaBaas" <${EMAIL_USER}>`,
+    await resend.emails.send({
+        from: FROM_ADDRESS,
         to,
         subject: "Reset your VillaBaas password",
         html: `

@@ -1,13 +1,12 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { IBooking } from "../models/booking.model";
 
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Resend's test sender only works if you haven't verified your own domain yet.
+// Once you verify a domain in the Resend dashboard, change this to
+// something like "VillaBaas <noreply@yourdomain.com>".
+const FROM_ADDRESS = "VillaBaas <onboarding@resend.dev>";
 
 function formatDate(date: Date): string {
     const months = [
@@ -42,7 +41,7 @@ export async function sendBookingConfirmationEmail(
     .header h1 { color: #ffffff; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
     .header p { color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 6px; }
     .logo-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; }
-    .logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+    .logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items:center; justify-content: center; }
     .logo-text { color: #ffffff; font-size: 20px; font-weight: 700; letter-spacing: 1px; }
     .body { padding: 36px 40px; }
     .greeting { font-size: 16px; color: #333; margin-bottom: 20px; line-height: 1.6; }
@@ -56,7 +55,7 @@ export async function sendBookingConfirmationEmail(
     .divider { height: 1px; background: #ebebeb; margin: 20px 0; }
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
     .detail-item { background: #fafafa; border: 1px solid #ebebeb; border-radius: 8px; padding: 14px 16px; }
-    .detail-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; margin-bottom: 4px; }
+    .detail-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; margin-bottom:4px; }
     .detail-value { font-size: 14px; font-weight: 600; color: #1a1a1a; }
     .price-box { background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
     .price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -181,8 +180,8 @@ export async function sendBookingConfirmationEmail(
 </html>
     `;
 
-    await transporter.sendMail({
-        from: `"VillaBaas" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+        from: FROM_ADDRESS,
         to: toEmail,
         subject: `Booking Confirmed — ${booking.villaName} | VillaBaas`,
         html,
@@ -270,8 +269,8 @@ export async function sendBookingCancellationEmail(
 </html>
     `;
 
-    await transporter.sendMail({
-        from: `"VillaBaas" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+        from: FROM_ADDRESS,
         to: toEmail,
         subject: `Booking Cancelled — ${booking.villaName} | VillaBaas`,
         html,
