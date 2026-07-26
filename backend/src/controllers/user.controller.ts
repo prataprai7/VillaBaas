@@ -1,8 +1,8 @@
 import { UserService } from "../services/user.service";
 import { z } from "zod";
-import { RegisterUserDTO, LoginUserDTO, UpdateUserDTO } from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/apihelper.util";
 import { Request, Response } from "express";
+import { RegisterUserDTO, LoginUserDTO, UpdateUserDTO, ForgotPasswordDTO, ResetPasswordDTO } from "../dtos/user.dto";
 
 const userService = new UserService();
 
@@ -86,4 +86,31 @@ export class UserController {
             );
         }
     }
+
+    async forgotPassword(req: Request, res: Response) {
+    try {
+        const parsed = ForgotPasswordDTO.safeParse(req.body);
+        if (!parsed.success) {
+            return ApiResponseHelper.error(res, z.prettifyError(parsed.error), 400);
+        }
+        await userService.forgotPassword(parsed.data.email);
+        return ApiResponseHelper.success(res, null, "If an account exists for this email, a reset link has been sent.");
+    } catch (error: any) {
+        return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
+    }
+}
+
+async resetPassword(req: Request, res: Response) {
+    try {
+        const parsed = ResetPasswordDTO.safeParse(req.body);
+        if (!parsed.success) {
+            return ApiResponseHelper.error(res, z.prettifyError(parsed.error), 400);
+        }
+        const { token } = req.params;
+        await userService.resetPassword(token, parsed.data.password);
+        return ApiResponseHelper.success(res, null, "Password reset successfully. You can now log in.");
+    } catch (error: any) {
+        return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
+    }
+}
 }
