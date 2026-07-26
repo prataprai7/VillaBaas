@@ -1,3 +1,6 @@
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import app from "./src/app";
 import { PORT } from "./src/configs/constant";
 import { connectToMongoDB } from "./src/database/mongodb";
@@ -10,4 +13,3 @@ app.listen(PORT, () => {
     console.log(`   POST http://localhost:${PORT}/api/v1/auth/register`);
     console.log(`   POST http://localhost:${PORT}/api/v1/auth/login\n`);
 });
-
