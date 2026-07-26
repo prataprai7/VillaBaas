@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import AuthVisual from "../(auth)/components/auth/AuthVisual";
+import AuthVisual from "../components/auth/AuthVisual";
 import { forgotPasswordAction } from "@/lib/actions/auth-action";
 import { ForgotPasswordSchema } from "@/lib/validations/auth-schemas";
 
