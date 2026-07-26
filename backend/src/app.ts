@@ -21,9 +21,10 @@ app.use(
       if (!origin) return callback(null, true);
 
       const allowedOrigins = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-      ];
+  "http://localhost:3000",
+  "http://localhost:5173",
+  ...(process.env.ALLOWED_ORIGINS?.split(",").map(o => o.trim()) || []),
+];
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);

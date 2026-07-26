@@ -15,9 +15,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
 
-    "sourceMap": true,
-
-    "ignoreDeprecations": "6.0"
+    "sourceMap": true
   },
   "include": ["**/*.ts", "src/controllers/batch_controller.js"],
   "exclude": ["node_modules", "dist"]
