@@ -378,6 +378,23 @@ export default function VillaDetailPage() {
               </div>
             </div>
           )}
+
+          {villa.address && (
+  <div style={card}>
+    <p style={sectionTitle}>Location</p>
+    <p style={{ fontSize: "0.85rem", color: "#888", marginBottom: 14 }}>{villa.address}</p>
+    <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #f0f0f0" }}>
+      <iframe
+        title={`Map showing ${villa.name}`}
+        width="100%"
+        height="320"
+        style={{ border: 0, display: "block" }}
+        loading="lazy"
+        src={`https://www.google.com/maps?q=${encodeURIComponent(villa.address)}&output=embed`}
+      />
+    </div>
+  </div>
+)}
         </div>
 
         {/* RIGHT COLUMN — Booking card */}
