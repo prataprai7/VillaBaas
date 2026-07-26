@@ -8,6 +8,22 @@ const bookingRepository = new BookingMongoRepository();
 const userRepository    = new UserMongoRepository();
 
 export class BookingService {
+    // A booking is treated as "completed" once its checkout date has passed,
+    // as long as it was actually paid for. This is computed on read — we
+    // never write "completed" back to MongoDB, so there's no cron job or
+    // background task needed; it's always accurate the moment it's asked for.
+    private withComputedStatus(booking: IBooking): IBooking {
+        const isPastCheckout = new Date(booking.checkOut).getTime() < Date.now();
+        if (booking.status === "paid" && isPastCheckout) {
+            // booking may be a Mongoose document; spread its plain data if available
+            const plain = typeof (booking as any).toObject === "function"
+                ? (booking as any).toObject()
+                : booking;
+            return { ...plain, status: "completed" } as IBooking;
+        }
+        return booking;
+    }
+
     async createBooking(userId: string, data: Partial<IBooking>): Promise<IBooking> {
         const checkIn  = new Date(data.checkIn!);
         const checkOut = new Date(data.checkOut!);
@@ -28,7 +44,8 @@ export class BookingService {
     }
 
     async getUserBookings(userId: string): Promise<IBooking[]> {
-        return bookingRepository.findByUser(userId);
+        const bookings = await bookingRepository.findByUser(userId);
+        return bookings.map((b) => this.withComputedStatus(b));
     }
 
     // NEW: single-booking lookup with ownership check. Used by the Khalti
@@ -38,7 +55,7 @@ export class BookingService {
         if (!booking) throw new HttpException(404, "Booking not found");
         if (booking.userId.toString() !== userId)
             throw new HttpException(403, "Forbidden — not your booking");
-        return booking;
+        return this.withComputedStatus(booking);
     }
 
     async payBooking(bookingId: string, userId: string, paymentMethod: string): Promise<IBooking> {
