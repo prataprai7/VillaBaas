@@ -10,13 +10,14 @@ if (!EMAIL_USER || !EMAIL_PASS) {
 
 const transportOptions = {
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // STARTTLS on 587, not implicit TLS
     auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASS,
     },
     family: 4, // force IPv4 — Render/many cloud hosts don't support outbound IPv6
+    connectionTimeout: 10000, // fail faster if genuinely blocked, easier to diagnose
 };
 
 export const transporter = nodemailer.createTransport(transportOptions as SMTPTransport.Options);
