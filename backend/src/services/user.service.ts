@@ -5,6 +5,8 @@ import { HttpException } from "../exceptions/http-exception";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { SECRET_KEY } from "../configs/constant";
+import crypto from "crypto";
+import { sendPasswordResetEmail } from "../configs/email";
 
 const userRepository = new UserMongoRepository();
 
@@ -98,4 +100,30 @@ export class UserService {
             pagination: { page: currentPage, limit: currentLimit, total, totalPages },
         };
     }
+    async forgotPassword(email: string): Promise<void> {
+    const user = await userRepository.getUserByEmail(email);
+    // Deliberately don't reveal whether the email exists — always resolve
+    // the same way so this endpoint can't be used to enumerate accounts.
+    if (!user) return;
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+    await userRepository.update(user._id.toString(), {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+    } as Partial<IUser>);
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${rawToken}`;
+    await sendPasswordResetEmail(user.email, resetUrl, user.firstName);
+}
+
+async resetPassword(rawToken: string, newPassword: string): Promise<void> {
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const user = await userRepository.findByResetToken(hashedToken);
+    if (!user) throw new HttpException(400, "This reset link is invalid or has expired");
+
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    await userRepository.resetPasswordAndClearToken(user._id.toString(), hashedPassword);
+}
 }
