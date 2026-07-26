@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
@@ -7,13 +8,18 @@ if (!EMAIL_USER || !EMAIL_PASS) {
     console.warn("EMAIL_USER or EMAIL_PASS not set — password reset emails will fail to send.");
 }
 
-export const transporter = nodemailer.createTransport({
-    service: "gmail",
+const transportOptions = {
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASS,
     },
-});
+    family: 4, // force IPv4 — Render/many cloud hosts don't support outbound IPv6
+};
+
+export const transporter = nodemailer.createTransport(transportOptions as SMTPTransport.Options);
 
 const BRAND_RED = "#DA0B00";
 
