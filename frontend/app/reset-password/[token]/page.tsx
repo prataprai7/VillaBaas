@@ -26,13 +26,14 @@ export default function ResetPasswordPage() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   function handleBlur(field: keyof typeof form) {
-    const result = ResetPasswordSchema.shape[field].safeParse(form[field]);
-    if (!result.success) {
-      setFieldErrors((prev) => ({ ...prev, [field]: result.error.issues[0].message }));
-    } else {
-      setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+  const result = ResetPasswordSchema.safeParse(form);
+  if (!result.success) {
+    const issue = result.error.issues.find((i) => i.path[0] === field);
+    setFieldErrors((prev) => ({ ...prev, [field]: issue?.message }));
+  } else {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
   }
+}
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

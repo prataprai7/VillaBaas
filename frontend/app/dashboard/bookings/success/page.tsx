@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getBookingById, Booking } from "@/lib/api/bookings-api";
@@ -25,7 +25,7 @@ function InfoBox({ label, value, icon }: { label: string; value: string; icon: R
   );
 }
 
-export default function BookingSuccessPage() {
+function BookingSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
@@ -327,5 +327,19 @@ export default function BookingSuccessPage() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
       `}</style>
     </div>
+  );
+}
+
+export default function BookingSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: "0.95rem", color: "#888" }}>Loading...</p>
+        </div>
+      }
+    >
+      <BookingSuccessContent />
+    </Suspense>
   );
 }

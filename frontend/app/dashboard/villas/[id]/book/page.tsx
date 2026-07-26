@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getTokenCookie } from "@/lib/api/cookies";
@@ -21,7 +21,7 @@ function fmtDate(d: string) {
   return date.toLocaleDateString("en-NP", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
-export default function BookingConfirmPage() {
+function BookingConfirmContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const params       = useParams();
@@ -439,5 +439,19 @@ export default function BookingConfirmPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
+  );
+}
+
+export default function BookingConfirmPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: "0.95rem", color: "#888" }}>Loading...</p>
+        </div>
+      }
+    >
+      <BookingConfirmContent />
+    </Suspense>
   );
 }

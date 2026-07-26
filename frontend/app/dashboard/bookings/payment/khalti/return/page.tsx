@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { verifyKhaltiPayment } from "@/lib/api/bookings-api";
 
@@ -8,7 +8,7 @@ const BRAND_RED = "#DA0B00";
 
 type VerifyState = "verifying" | "success" | "failed" | "pending";
 
-export default function KhaltiReturnPage() {
+function KhaltiReturnContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [state, setState] = useState<VerifyState>("verifying");
@@ -87,5 +87,13 @@ export default function KhaltiReturnPage() {
         @keyframes khalti-spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
+  );
+}
+
+export default function KhaltiReturnPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</div>}>
+      <KhaltiReturnContent />
+    </Suspense>
   );
 }

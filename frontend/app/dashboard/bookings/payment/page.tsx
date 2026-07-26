@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getVillaById, Villa, resolveImageUrl } from "@/lib/api/villas-api";
 import { createBooking, initiateKhaltiPayment } from "@/lib/api/bookings-api";
@@ -18,7 +18,7 @@ function nightsBetween(checkIn: string, checkOut: string): number {
   return diff > 0 ? diff : 1;
 }
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -214,6 +214,20 @@ export default function PaymentPage() {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
       `}</style>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: "0.95rem", color: "#888" }}>Loading...</p>
+        </div>
+      }
+    >
+      <PaymentPageContent />
+    </Suspense>
   );
 }
 
