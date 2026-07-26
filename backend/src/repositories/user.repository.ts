@@ -9,6 +9,8 @@ export interface IUserRepository {
     getAllPaginated(page: number, limit: number, search?: string): Promise<{ data: IUser[]; total: number }>;
     update(id: string, user: Partial<IUser>): Promise<IUser | null>;
     delete(id: string): Promise<boolean>;
+    findByResetToken(hashedToken: string): Promise<IUser | null>;
+    resetPasswordAndClearToken(id: string, hashedPassword: string): Promise<void>;
 }
 
 export class UserMongoRepository implements IUserRepository {
@@ -58,4 +60,18 @@ export class UserMongoRepository implements IUserRepository {
         const deleted = await UserModel.findByIdAndDelete(id);
         return !!deleted;
     }
+
+    async findByResetToken(hashedToken: string): Promise<IUser | null> {
+    return UserModel.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { $gt: new Date() },
+    }).select("+resetPasswordToken +resetPasswordExpires");
+}
+
+    async resetPasswordAndClearToken(id: string, hashedPassword: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(id, {
+        $set: { password: hashedPassword },
+        $unset: { resetPasswordToken: "", resetPasswordExpires: "" },
+    });
+}
 }
