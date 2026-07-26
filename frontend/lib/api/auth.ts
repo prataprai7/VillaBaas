@@ -77,3 +77,24 @@ export async function apiUpdateProfile(
   });
   return handleResponse<AuthUser>(res);
 }
+
+export async function apiForgotPassword(email: string): Promise<ApiResponse<null>> {
+  const res = await fetch(AUTH_ENDPOINTS.forgotPassword, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return handleResponse<null>(res);
+}
+
+export async function apiResetPassword(
+  token: string,
+  body: { password: string; confirmPassword: string }
+): Promise<ApiResponse<null>> {
+  const res = await fetch(AUTH_ENDPOINTS.resetPassword(token), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return handleResponse<null>(res);
+}

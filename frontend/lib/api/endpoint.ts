@@ -6,4 +6,6 @@ export const AUTH_ENDPOINTS = {
   login:    `${API_BASE}/auth/login`,
   whoami:   `${API_BASE}/auth/whoami`,
   update:   `${API_BASE}/auth/update`,
+  forgotPassword: `${API_BASE}/auth/forgot-password`,
+  resetPassword: (token: string) => `${API_BASE}/auth/reset-password/${token}`,
 };

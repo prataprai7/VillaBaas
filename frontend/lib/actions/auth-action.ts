@@ -1,13 +1,15 @@
 "use server";
 
-import { apiRegister, apiLogin, apiWhoami, apiUpdateProfile } from "../api/auth";
 import { setServerAuthCookies, getServerToken } from "../api/server-cookies";
 import {
   RegisterSchema,
   LoginSchema,
   UpdateProfileSchema,
   ChangePasswordSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
 } from "../validations/auth-schemas";
+import { apiRegister, apiLogin, apiWhoami, apiUpdateProfile, apiForgotPassword, apiResetPassword } from "../api/auth";
 
 
 // Define types inline — avoids RSC boundary stripping export type
@@ -133,5 +135,44 @@ export async function changePasswordAction(input: {
     return { success: true, message: "Password changed successfully" };
   } catch (err: unknown) {
     return { success: false, message: err instanceof Error ? err.message : "Password change failed" };
+  }
+}
+
+export async function forgotPasswordAction(input: { email: string }): Promise<ActionResult> {
+  const parsed = ForgotPasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    parsed.error.issues.forEach((i) => {
+      const f = i.path[0] as string;
+      if (!fieldErrors[f]) fieldErrors[f] = i.message;
+    });
+    return { success: false, fieldErrors };
+  }
+  try {
+    await apiForgotPassword(parsed.data.email);
+    return { success: true, message: "If an account exists for this email, a reset link has been sent." };
+  } catch (err: unknown) {
+    return { success: false, message: err instanceof Error ? err.message : "Something went wrong" };
+  }
+}
+
+export async function resetPasswordAction(
+  token: string,
+  input: { password: string; confirmPassword: string }
+): Promise<ActionResult> {
+  const parsed = ResetPasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    parsed.error.issues.forEach((i) => {
+      const f = i.path[0] as string;
+      if (!fieldErrors[f]) fieldErrors[f] = i.message;
+    });
+    return { success: false, fieldErrors };
+  }
+  try {
+    await apiResetPassword(token, parsed.data);
+    return { success: true, message: "Password reset successfully." };
+  } catch (err: unknown) {
+    return { success: false, message: err instanceof Error ? err.message : "Reset failed" };
   }
 }
