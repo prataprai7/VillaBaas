@@ -14,6 +14,9 @@ import bookingRoutes from "./routes/booking.route";
 
 const app: Application = express();
 
+app.get("/health", (req: Request, res: Response) => {
+  return res.status(200).json({ status: "ok" });
+});
 
 app.use(
   cors({
