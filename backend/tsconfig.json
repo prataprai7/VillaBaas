@@ -15,7 +15,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
 
-    "sourceMap": true
+    "sourceMap": true,
+
+    "isolatedModules": true,
+    "types": ["node", "jest"]
   },
   "include": ["**/*.ts", "src/controllers/batch_controller.js"],
   "exclude": ["node_modules", "dist"]
