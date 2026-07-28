@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,  setUser]  = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  // FIX: useCallback with empty deps so the reference is stable across renders
   const refreshUser = useCallback(() => {
     const storedUser  = getUserCookie() as AuthUser | null;
     const storedToken = getTokenCookie();
