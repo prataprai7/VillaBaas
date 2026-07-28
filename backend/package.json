@@ -6,7 +6,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest --runInBand",
-    "dev:test": "dotenv -e .env.test -- tsx --watch index.ts"
+    "dev:test": "dotenv -e .env.test -- tsx --watch index.ts",
+    "seed:test": "dotenv -e .env.test -- tsx src/scripts/seed-villas.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
